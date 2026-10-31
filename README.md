@@ -85,3 +85,10 @@ The compiled binary will be placed directly in `Nota.exe`.
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](LICENSE) file for the full text.
 
+---
+
+## Disclaimer
+
+Nota is an independent open-source project and is not affiliated with, endorsed by, or sponsored by Notion Labs, Inc. Notion is a registered trademark of Notion Labs, Inc.
+
+

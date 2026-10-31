@@ -32,7 +32,7 @@ const INITIAL_PAGES: Record<string, Page> = {
       {
         id: 'b-p-1',
         type: 'paragraph',
-        content: 'Notion is wonderful, but running it on older machines is painful because Electron loads an entire copy of Chrome in the background. Here is what we fixed:',
+        content: 'Traditional workspace apps are powerful, but running them on low-spec machines is painful because Electron bundles an entire copy of Chrome in the background. Here is what we fixed:',
       },
       {
         id: 'b-todo-1',
@@ -152,7 +152,7 @@ const INITIAL_PAGES: Record<string, Page> = {
         id: 'b-code-1',
         type: 'code',
         language: 'typescript',
-        content: `// Blazingly fast memory check\nfunction getMemoryUsage() {\n  return "34.2 MB (vs Notion Electron 890 MB)";\n}`,
+        content: `// Blazingly fast memory check\nfunction getMemoryUsage() {\n  return "34.2 MB (vs Electron 900+ MB)";\n}`,
       },
     ],
   },
@@ -212,11 +212,11 @@ const INITIAL_DATABASES: Record<string, Database> = {
       {
         id: 'row-3',
         cells: {
-          'c-title': 'Relational Kanban Board and Table Views',
-          'c-status': 'in-progress',
+          'c-title': 'Kanban Board Drag & Move (HTML5 DnD)',
+          'c-status': 'done',
           'c-priority': 'p1',
           'c-verified': true,
-          'c-date': '2026-11-02',
+          'c-date': '2026-10-31',
         },
       },
       {
@@ -226,17 +226,17 @@ const INITIAL_DATABASES: Record<string, Database> = {
           'c-status': 'done',
           'c-priority': 'p2',
           'c-verified': true,
-          'c-date': '2026-11-05',
+          'c-date': '2026-10-31',
         },
       },
       {
         id: 'row-5',
         cells: {
-          'c-title': 'Offline-first SQLite & JSON sync',
-          'c-status': 'not-started',
-          'c-priority': 'p3',
-          'c-verified': false,
-          'c-date': '2026-11-10',
+          'c-title': 'Offline-first Local File & JSON Sync',
+          'c-status': 'done',
+          'c-priority': 'p1',
+          'c-verified': true,
+          'c-date': '2026-10-31',
         },
       },
     ],

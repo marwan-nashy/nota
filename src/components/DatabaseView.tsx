@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Table as TableIcon, Kanban, Plus, MoreHorizontal, Check, Trash2, Calendar, 
-  Tag, Search, X, CheckSquare, Type
+  Tag, Search, X, CheckSquare, Type, GripVertical
 } from 'lucide-react';
 import { Database, DatabaseColumn, DatabaseRow, DatabaseViewType, ColumnType } from '../types';
 import { nanoid } from 'nanoid';
@@ -17,6 +17,10 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColName, setNewColName] = useState('');
   const [newColType, setNewColType] = useState<ColumnType>('text');
+
+  // Drag & drop state for Kanban cards
+  const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
 
   const handleViewChange = (view: DatabaseViewType) => {
     setActiveView(view);
@@ -311,17 +315,40 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
           </button>
         </div>
       ) : (
-        /* Board / Kanban View */
-        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto min-h-[300px] bg-[#fbfbfa] dark:bg-[#1c1c1c]">
+        /* Board / Kanban View with Drag & Drop */
+        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto min-h-[320px] bg-[#fbfbfa] dark:bg-[#1c1c1c]">
           {statusOptions.map((status) => {
             const columnRows = filteredRows.filter(
               (r) => (r.cells['c-status'] || 'not-started') === status.id
             );
+            const isDragOver = dragOverColumnId === status.id;
 
             return (
               <div
                 key={status.id}
-                className="flex flex-col bg-white dark:bg-[#242424] rounded-lg border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-xs p-2.5 min-w-[220px]"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (dragOverColumnId !== status.id) {
+                    setDragOverColumnId(status.id);
+                  }
+                }}
+                onDragLeave={() => {
+                  setDragOverColumnId(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const rowId = e.dataTransfer.getData('text/plain') || draggedRowId;
+                  if (rowId) {
+                    handleCellChange(rowId, 'c-status', status.id);
+                  }
+                  setDraggedRowId(null);
+                  setDragOverColumnId(null);
+                }}
+                className={`flex flex-col rounded-xl border p-2.5 min-w-[220px] transition-all duration-150 ${
+                  isDragOver
+                    ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/40'
+                    : 'bg-white dark:bg-[#242424] border-[#e9e9e7] dark:border-[#2e2e2e] shadow-xs'
+                }`}
               >
                 {/* Column Header */}
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -338,68 +365,90 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                   <button
                     onClick={() => handleAddRow(status.id)}
                     className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#323232] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    title="Add card"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* Cards List */}
-                <div className="flex-1 space-y-2 overflow-y-auto max-h-[360px]">
-                  {columnRows.map((row) => (
-                    <div
-                      key={row.id}
-                      className="p-2.5 rounded-md border border-[#e9e9e7] dark:border-[#333333] bg-[#fafafa] dark:bg-[#2a2a2a] hover:shadow-sm transition-all group"
-                    >
-                      <div className="flex items-start justify-between gap-1 mb-1.5">
-                        <input
-                          type="text"
-                          value={row.cells['c-title'] || ''}
-                          onChange={(e) => handleCellChange(row.id, 'c-title', e.target.value)}
-                          className="w-full bg-transparent font-medium text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
-                        />
-                        <button
-                          onClick={() => handleDeleteRow(row.id)}
-                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                {/* Cards List (Draggable) */}
+                <div className="flex-1 space-y-2 overflow-y-auto max-h-[380px] min-h-[100px]">
+                  {columnRows.map((row) => {
+                    const isDraggingThis = draggedRowId === row.id;
 
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-[#383838] text-[11px]">
-                        {row.cells['c-date'] ? (
-                          <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> {row.cells['c-date']}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">No date</span>
-                        )}
+                    return (
+                      <div
+                        key={row.id}
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', row.id);
+                          setDraggedRowId(row.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedRowId(null);
+                          setDragOverColumnId(null);
+                        }}
+                        className={`p-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing group ${
+                          isDraggingThis
+                            ? 'opacity-40 border-dashed border-blue-400 bg-blue-50/30'
+                            : 'bg-[#fafafa] dark:bg-[#2a2a2a] border-[#e9e9e7] dark:border-[#333333] hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-1 mb-1.5">
+                          <div className="flex items-center gap-1 flex-1">
+                            <GripVertical className="w-3 h-3 text-gray-300 dark:text-gray-600 shrink-0 group-hover:text-gray-500" />
+                            <input
+                              type="text"
+                              value={row.cells['c-title'] || ''}
+                              onChange={(e) => handleCellChange(row.id, 'c-title', e.target.value)}
+                              className="w-full bg-transparent font-medium text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleDeleteRow(row.id)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-0.5 rounded"
+                            title="Delete card"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
 
-                        {/* Move card to status dropdown */}
-                        <select
-                          value={row.cells['c-status'] || 'not-started'}
-                          onChange={(e) => handleCellChange(row.id, 'c-status', e.target.value)}
-                          className="text-[10px] bg-white dark:bg-[#333333] border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 text-gray-600 dark:text-gray-300"
-                        >
-                          {statusOptions.map((opt) => (
-                            <option key={opt.id} value={opt.id}>
-                              Move: {opt.label}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-[#383838] text-[11px]">
+                          {row.cells['c-date'] ? (
+                            <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1 text-[10px]">
+                              <Calendar className="w-3 h-3 text-orange-400" /> {row.cells['c-date']}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-[10px]">No date</span>
+                          )}
+
+                          {/* Move card to status fallback dropdown */}
+                          <select
+                            value={row.cells['c-status'] || 'not-started'}
+                            onChange={(e) => handleCellChange(row.id, 'c-status', e.target.value)}
+                            className="text-[10px] bg-white dark:bg-[#333333] border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 text-gray-600 dark:text-gray-300"
+                          >
+                            {statusOptions.map((opt) => (
+                              <option key={opt.id} value={opt.id}>
+                                → {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {columnRows.length === 0 && (
-                    <div className="text-center py-6 text-[11px] text-gray-400 border border-dashed border-gray-200 dark:border-[#333333] rounded">
-                      No cards
+                    <div className="text-center py-8 text-[11px] text-gray-400 border border-dashed border-gray-200 dark:border-[#333333] rounded-lg">
+                      Drop cards here
                     </div>
                   )}
                 </div>
 
                 <button
                   onClick={() => handleAddRow(status.id)}
-                  className="mt-2 w-full py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:bg-[#efefee] dark:hover:bg-[#323232] rounded flex items-center justify-center gap-1 transition-colors"
+                  className="mt-2 w-full py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:bg-[#efefee] dark:hover:bg-[#323232] rounded-lg flex items-center justify-center gap-1 transition-colors"
                 >
                   <Plus className="w-3 h-3" /> Add card
                 </button>
@@ -441,7 +490,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                 <select
                   value={newColType}
                   onChange={(e) => setNewColType(e.target.value as ColumnType)}
-                  className="w-full bg-white dark:bg-[#1c1c1c] border border-gray-300 dark:border-[#444] rounded-lg px-2 py-1.5 text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
+                  className="w-full bg-white dark:bg-[#1c1c1c] border border-gray-300 dark:border-[#444] rounded-lg px-2.5 py-1.5 text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
                 >
                   <option value="text">Text</option>
                   <option value="status">Status (Tags)</option>
