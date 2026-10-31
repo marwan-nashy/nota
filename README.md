@@ -1,6 +1,14 @@
 # Nota
 
+[![Website](https://img.shields.io/badge/Website-marwan--nashy.github.io%2Fnota-indigo?style=flat&logo=safari)](https://marwan-nashy.github.io/nota/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Release](https://img.shields.io/github/v/release/marwan-nashy/nota?color=emerald)](https://github.com/marwan-nashy/nota/releases)
+[![Memory](https://img.shields.io/badge/RAM-%3C%2035MB-success)](https://github.com/marwan-nashy/nota)
+
 A lightweight, zero-bloat, open-source personal workspace designed specifically to run flawlessly on low-spec "potato PCs" (low RAM, integrated Intel GPUs, dual-core CPUs) without Electron runtime overhead.
+
+🌐 **Live Website**: [https://marwan-nashy.github.io/nota/](https://marwan-nashy.github.io/nota/)
+
 
 ## Architectural Core Principles
 1. **Zero Electron Bloat**: Avoids bundling full Chromium + Node.js runtimes. Built on **Tauri v2 (Rust backend)** + **OS Evergreen WebView2** (~30 MB idle RAM vs. official apps at 600 MB–1.2 GB).
