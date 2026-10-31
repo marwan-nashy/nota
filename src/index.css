@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-workspace: #ffffff;
+    --bg-sidebar: #fbfbfa;
+    --bg-hover: #efefee;
+    --bg-active: #e8e8e6;
+    --border-color: #e9e9e7;
+    --text-primary: #37352f;
+    --text-secondary: #787774;
+  }
+
+  .dark {
+    --bg-workspace: #191919;
+    --bg-sidebar: #202020;
+    --bg-hover: #2c2c2c;
+    --bg-active: #353535;
+    --border-color: #2e2e2e;
+    --text-primary: #ebebeb;
+    --text-secondary: #9b9b9b;
+  }
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif {
+  font-family: 'Newsreader', Lyon-Text, Georgia, serif !important;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Custom scrollbars matching Notion */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 119, 116, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 119, 116, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Editable content area focus outline removal */
+[contenteditable]:focus {
+  outline: none;
+}

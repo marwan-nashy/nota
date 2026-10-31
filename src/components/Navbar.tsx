@@ -1,0 +1,234 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Menu, Star, MoreHorizontal, Download, Trash2, Maximize2, Minimize2, 
+  Type, Check, FileText, Printer, Code, Share2
+} from 'lucide-react';
+import { Page } from '../types';
+import { exportPageMarkdown } from '../services/storage';
+
+interface NavbarProps {
+  page: Page;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  onUpdatePage: (updated: Page) => void;
+  onDeletePage: (id: string) => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  page,
+  sidebarOpen,
+  onToggleSidebar,
+  onUpdatePage,
+  onDeletePage,
+}) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  const allText = page.blocks.map((b) => b.content).join(' ');
+  const wordCount = allText.trim() ? allText.trim().split(/\s+/).length : 0;
+  const charCount = allText.length;
+
+  const handleExportMarkdown = () => {
+    const md = exportPageMarkdown(page);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${page.title || 'untitled'}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setShowMenu(false);
+  };
+
+  const handleExportHTML = () => {
+    const content = page.blocks.map(b => `<div class="block ${b.type}">${b.content}</div>`).join('\n');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${page.title}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;line-height:1.6;color:#333;}.block{margin:8px 0;}</style></head><body><h1>${page.icon} ${page.title}</h1>${content}</body></html>`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${page.title || 'untitled'}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setShowMenu(false);
+  };
+
+  const handlePrint = () => {
+    window.print();
+    setShowMenu(false);
+  };
+
+  return (
+    <header className="h-11 border-b border-[#e9e9e7] dark:border-[#2e2e2e] bg-white/80 dark:bg-[#191919]/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-30 select-none">
+      {/* Left: Sidebar Toggle & Breadcrumb */}
+      <div className="flex items-center gap-2">
+        {!sidebarOpen && (
+          <button
+            onClick={onToggleSidebar}
+            className="p-1 rounded-md text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer"
+            title="Open sidebar"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <span>Workspace</span>
+          <span>/</span>
+          <span className="flex items-center gap-1 font-medium text-[#37352f] dark:text-[#ebebeb] max-w-[200px] truncate">
+            <span>{page.icon || '📄'}</span>
+            <span>{page.title || 'Untitled'}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-1">
+        {/* Star / Favorite */}
+        <button
+          onClick={() => onUpdatePage({ ...page, isFavorite: !page.isFavorite })}
+          className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            page.isFavorite
+              ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c]'
+          }`}
+          title={page.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Star className={`w-4 h-4 ${page.isFavorite ? 'fill-current' : ''}`} />
+        </button>
+
+        {/* More Options Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer"
+            title="Style & Options"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+
+          {showMenu && (
+            <div
+              ref={menuRef}
+              className="absolute right-0 top-8 z-50 w-64 bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-2xl rounded-xl p-2 text-xs animate-in fade-in zoom-in-95"
+            >
+              <div className="px-2 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                Typography Style
+              </div>
+              <div className="grid grid-cols-3 gap-1 p-1 mb-2 bg-[#f5f5f4] dark:bg-[#1e1e1e] rounded-lg">
+                <button
+                  onClick={() => onUpdatePage({ ...page, font: 'sans' })}
+                  className={`py-1 text-center font-sans rounded cursor-pointer ${
+                    page.font === 'sans'
+                      ? 'bg-white dark:bg-[#2f2f2f] font-semibold shadow-xs text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  Default
+                </button>
+                <button
+                  onClick={() => onUpdatePage({ ...page, font: 'serif' })}
+                  className={`py-1 text-center font-serif rounded cursor-pointer ${
+                    page.font === 'serif'
+                      ? 'bg-white dark:bg-[#2f2f2f] font-semibold shadow-xs text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  Serif
+                </button>
+                <button
+                  onClick={() => onUpdatePage({ ...page, font: 'mono' })}
+                  className={`py-1 text-center font-mono rounded cursor-pointer ${
+                    page.font === 'mono'
+                      ? 'bg-white dark:bg-[#2f2f2f] font-semibold shadow-xs text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  Mono
+                </button>
+              </div>
+
+              <div className="border-t border-gray-100 dark:border-[#383838] my-1"></div>
+
+              {/* Layout Toggles */}
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => onUpdatePage({ ...page, fullWidth: !page.fullWidth })}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <span>Full width layout</span>
+                  {page.fullWidth && <Check className="w-3.5 h-3.5 text-blue-500" />}
+                </button>
+                <button
+                  onClick={() => onUpdatePage({ ...page, smallText: !page.smallText })}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <span>Small text mode</span>
+                  {page.smallText && <Check className="w-3.5 h-3.5 text-blue-500" />}
+                </button>
+              </div>
+
+              <div className="border-t border-gray-100 dark:border-[#383838] my-1"></div>
+
+              {/* Export Actions */}
+              <div className="space-y-0.5">
+                <button
+                  onClick={handleExportMarkdown}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Export as Markdown (.md)</span>
+                </button>
+                <button
+                  onClick={handleExportHTML}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <Code className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Export as HTML (.html)</span>
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Print / Save as PDF</span>
+                </button>
+              </div>
+
+              <div className="border-t border-gray-100 dark:border-[#383838] my-1"></div>
+
+              {/* Delete Page */}
+              <button
+                onClick={() => {
+                  onDeletePage(page.id);
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete page</span>
+              </button>
+
+              <div className="border-t border-gray-100 dark:border-[#383838] mt-2 pt-2 text-[10px] text-gray-400 px-2 flex justify-between">
+                <span>{wordCount} words</span>
+                <span>{charCount} characters</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};

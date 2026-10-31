@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Production builds
+dist/
+.vite/
+.vite-temp/
+
+# Rust compiler artifacts
+src-tauri/target/
+target/
+Cargo.lock
+
+# Standalone binary executable
+*.exe
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
