@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Code, Palette, Link as LinkIcon } from 'lucide-react';
 
-const NOTION_COLORS = [
+const PALETTE_COLORS = [
   { name: 'Default', text: 'inherit', bg: 'transparent' },
   { name: 'Gray', text: '#787774', bg: '#f1f1ef' },
   { name: 'Brown', text: '#9f6b53', bg: '#f4eeee' },
@@ -59,7 +59,7 @@ export const FloatingToolbar: React.FC = () => {
     document.execCommand(command, false, value);
   };
 
-  const applyColor = (color: typeof NOTION_COLORS[0], isBg = false) => {
+  const applyColor = (color: typeof PALETTE_COLORS[0], isBg = false) => {
     if (isBg) {
       exec('hiliteColor', color.bg);
     } else {
@@ -136,7 +136,7 @@ export const FloatingToolbar: React.FC = () => {
           <div className="absolute left-0 top-8 z-50 w-44 bg-[#2b2b2b] border border-[#3e3e3e] rounded-lg shadow-xl p-2 text-xs">
             <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Text Color</div>
             <div className="grid grid-cols-5 gap-1 mb-2">
-              {NOTION_COLORS.slice(0, 10).map((c) => (
+              {PALETTE_COLORS.slice(0, 10).map((c) => (
                 <button
                   key={c.name}
                   onMouseDown={(e) => { e.preventDefault(); applyColor(c, false); }}
@@ -151,7 +151,7 @@ export const FloatingToolbar: React.FC = () => {
 
             <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Highlight</div>
             <div className="grid grid-cols-5 gap-1">
-              {NOTION_COLORS.slice(1, 10).map((c) => (
+              {PALETTE_COLORS.slice(1, 10).map((c) => (
                 <button
                   key={`bg-${c.name}`}
                   onMouseDown={(e) => { e.preventDefault(); applyColor(c, true); }}

@@ -39,7 +39,7 @@ body {
   font-family: 'JetBrains Mono', Menlo, Monaco, Consolas, monospace !important;
 }
 
-/* Custom scrollbars matching Notion */
+/* Custom sleek minimalist scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

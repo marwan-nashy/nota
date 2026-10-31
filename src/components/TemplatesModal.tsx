@@ -22,7 +22,7 @@ export const TEMPLATES = [
       { id: 'b1', type: 'callout', icon: '📅', content: `<b>Date:</b> ${new Date().toLocaleDateString()} &nbsp;|&nbsp; <b>Participants:</b> Product, Engineering, Design` },
       { id: 'b2', type: 'heading2', content: '🎯 Goals & Agenda' },
       { id: 'b3', type: 'bullet', content: 'Review potato PC performance metrics & memory profiling' },
-      { id: 'b4', type: 'bullet', content: 'Align on Q4 feature releases & Notion parity' },
+      { id: 'b4', type: 'bullet', content: 'Align on Q4 feature releases & modular block parity' },
       { id: 'b5', type: 'heading2', content: '💬 Discussion & Key Decisions' },
       { id: 'b6', type: 'paragraph', content: 'We verified sub-35MB RAM consumption and zero Electron bloat.' },
       { id: 'b7', type: 'heading2', content: '✅ Action Items' },

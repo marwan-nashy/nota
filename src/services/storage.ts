@@ -1,7 +1,8 @@
 import { Page, Database, Workspace, WorkspaceState } from '../types';
 
-const STORAGE_KEY = 'better_notion_workspace_v2';
-const OLD_STORAGE_KEY = 'better_notion_workspace_v1';
+const STORAGE_KEY = 'nota_workspace_v2';
+const LEGACY_STORAGE_KEY_V2 = 'better_notion_workspace_v2';
+const LEGACY_STORAGE_KEY_V1 = 'better_notion_workspace_v1';
 
 const INITIAL_PAGES: Record<string, Page> = {
   'welcome-page': {
@@ -255,7 +256,7 @@ const DEFAULT_WORKSPACE: Workspace = {
 
 export function loadWorkspace(): WorkspaceState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY_V2);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.workspaces && parsed.activeWorkspaceId) {
@@ -264,7 +265,7 @@ export function loadWorkspace(): WorkspaceState {
     }
 
     // Try migration from v1
-    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+    const oldRaw = localStorage.getItem(LEGACY_STORAGE_KEY_V1);
     if (oldRaw) {
       const oldParsed = JSON.parse(oldRaw);
       if (oldParsed && oldParsed.pages) {
