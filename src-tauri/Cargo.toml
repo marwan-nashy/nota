@@ -2,7 +2,8 @@
 name = "nota"
 version = "1.0.0"
 description = "Nota Desktop App"
-authors = ["Nota Contributors"]
+authors = ["Marwan <marwannashy11@gmail.com>"]
+license = "GPL-3.0-or-later"
 edition = "2021"
 
 [lib]

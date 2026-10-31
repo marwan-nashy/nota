@@ -70,3 +70,10 @@ npm run tauri dev
 npm run tauri build --no-bundle
 ```
 The compiled binary will be placed directly in `Nota.exe`.
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](LICENSE) file for the full text.
+
