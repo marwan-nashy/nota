@@ -254,13 +254,33 @@ const DEFAULT_WORKSPACE: Workspace = {
   createdAt: Date.now(),
 };
 
+function sanitizeWorkspaceState(state: WorkspaceState): WorkspaceState {
+  try {
+    let json = JSON.stringify(state);
+    if (json.includes('Notion is wonderful')) {
+      json = json.replace(
+        /Notion is wonderful, but running it on older machines is painful because Electron loads an entire copy of Chrome in the background\./g,
+        'Traditional workspace apps are powerful, but running them on low-spec machines is painful because Electron bundles an entire copy of Chrome in the background.'
+      );
+      const cleaned = JSON.parse(json);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+      } catch {}
+      return cleaned;
+    }
+  } catch (e) {
+    console.error('Failed to sanitize workspace state', e);
+  }
+  return state;
+}
+
 export function loadWorkspace(): WorkspaceState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY_V2);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.workspaces && parsed.activeWorkspaceId) {
-        return parsed;
+        return sanitizeWorkspaceState(parsed);
       }
     }
 
@@ -279,12 +299,13 @@ export function loadWorkspace(): WorkspaceState {
           createdAt: Date.now(),
         };
 
-        return {
+        const migratedState: WorkspaceState = {
           workspaces: { 'ws-default': migratedWorkspace },
           activeWorkspaceId: 'ws-default',
           sidebarOpen: oldParsed.sidebarOpen ?? true,
           theme: oldParsed.theme || 'dark',
         };
+        return sanitizeWorkspaceState(migratedState);
       }
     }
   } catch (err) {
