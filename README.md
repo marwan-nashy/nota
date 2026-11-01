@@ -31,7 +31,13 @@ A lightweight, zero-bloat, open-source personal workspace designed specifically 
 ## Feature Parity & Highlights
 
 ### 1. True Block-Based Document Editor
-- **Slash Menu (`/`)**: Type `/` anywhere to insert Headings (H1, H2, H3), To-do items, Bullet lists, Numbered lists, Toggles, Callouts, Quotes, Dividers, Code snippets, and Databases.
+- **Slash Menu (`/`)**: Type `/` anywhere to insert Headings (H1, H2, H3), To-do items, Bullet lists, Numbered lists, Toggles, Callouts, Quotes, Dividers, Code snippets, KaTeX Math (`/math`), Mermaid Diagrams (`/diagram`), Table of Contents (`/toc`), Voice Memos (`/voice`), and Relational Databases.
+- **Collapsible Headings (`H1`, `H2`, `H3`)**: 1-click fold/unfold chevron to collapse child sections under any heading with an inline expansion badge.
+- **In-Page Find & Replace (`Ctrl + F`)**: Real-time floating search toolbar with match counter, next/previous navigation, case matching, and replace all.
+- **Focus / Zen Mode (`F11`)**: Fullscreen distraction-free typing without sidebars or toolbars, plus typewriter center mode.
+- **Live Word & Read-Time Counter**: Real-time word, character, and estimated reading time statistics.
+- **Multi-Tab Document Strip**: Browser-style tabs across the top to keep active notes open and switch seamlessly.
+- **Inline `#tags` & Tag Explorer**: Type `#tag` anywhere in your notes and browse cross-referenced topics from the sidebar.
 - **Markdown Auto-Conversion**:
   - `# `, `## `, `### ` $\rightarrow$ Headings
   - `[] ` or `[ ] ` $\rightarrow$ Interactive checkbox
@@ -39,31 +45,40 @@ A lightweight, zero-bloat, open-source personal workspace designed specifically 
   - `1. ` $\rightarrow$ Numbered list
   - `> ` $\rightarrow$ Blockquote
   - `---` $\rightarrow$ Divider
-- **Block Hover Controls**:
+- **Block Hover & Drag-and-Drop Controls**:
   - `+` button to quickly insert a block below.
-  - `⋮⋮` handle to open the block transformation menu (*Turn into...*, *Delete*).
+  - `⋮⋮` 6-dot grip handle to drag and reorder blocks across the page.
 - **Fluid Keyboard Navigation**: `Enter` creates blocks, `Backspace` converts or deletes empty blocks, `Arrow Up/Down` navigates seamlessly.
 
 ### 2. Inline Relational Databases (Tables & Kanban Boards)
 - **Table View**: Spreadsheet layout with typed columns (`Task Name`, `Status`, `Priority`, `Checkbox`, `Due Date`), inline cell editing, and row addition.
 - **Kanban Board View**: Real-time visual cards grouped by Status (*Not Started*, *In Progress*, *Completed*), with one-click status transitions.
 
-### 3. Workspace System & Navigation
-- Hierarchical sidebar with collapsible page trees and custom emoji icons.
-- **Multi-Workspace Switcher**: Create new workspaces, rename them, pick custom icons, and switch contexts instantly.
-- **Page Covers**: Sunset, Ocean, Violet, and Dark Slate gradient presets.
-- **Typography Switcher**: Instant toggle between **Default (Inter)**, **Serif (Newsreader)**, and **Mono (JetBrains Mono)**.
-- **Layout Controls**: Full-width canvas toggle and Small-text mode.
+### 3. Visual Knowledge Graph & Media Engine
+- **Obsidian-Style 2D Knowledge Graph**: Interactive force-directed graph view connecting notes across your workspace with physics simulation and 1-click navigation.
+- **Mermaid.js Flowcharts & Diagrams**: Built-in SVG renderer for flowcharts, sequence diagrams, state machines, and mindmaps (`/diagram`).
+- **KaTeX LaTeX Math Formulas**: Clean rendering engine for mathematical equations and scientific proofs (`/math`).
+- **Web Audio Voice Notes (`/voice`)**: Offline microphone recorder and audio memo player stored in local IndexedDB.
+- **Local Image Paste (`Ctrl+V`) & Drag-and-Drop**: Paste screenshots directly from your clipboard or drag image files onto the page. Stored 100% offline in browser IndexedDB.
 
-### 4. Instant Command Palette (`Ctrl + K` / `Ctrl + P`)
-- Instant search across all page titles and block contents.
-- Quick actions to toggle dark/light mode, create pages, and export backups.
-
-### 5. Data Ownership & Persistence
+### 4. Privacy, Security & Data Ownership
+- **Encrypted Vault (AES-GCM-256)**: Password-protect confidential pages with client-side 256-bit cryptography and zero cloud exposure.
+- **Local Revision History & Auto-Snapshots**: Time-machine rollback checkpoints with word deltas and 1-click restore.
+- **Obsidian, Markdown & Notion Importer**: Drag-and-drop `.md` folders or Notion export files directly into your workspace.
+- **Direct P2P & QR Transfer**: Wirelessly migrate your encrypted workspace between PC and mobile phone with zero servers.
 - **100% Local-First**: Automatic debounced saving to local storage.
-- **Export Page to Markdown (`.md`)**: One-click download of any page as clean markdown.
+- **Export Page to Markdown (`.md`) / HTML**: One-click download of any page as clean markdown or formatted HTML.
 - **Export/Import Workspace (`.json`)**: Backup and restore your entire workspace anytime.
-- **Trash & Archive Modal**: Restore deleted pages or permanently purge them.
+
+### 5. Bilingual English & Arabic (RTL) Support
+- **1-Click Language Switcher**: Seamless toggle between English and Arabic.
+- **Full RTL Layout Inversion**: Automatic bidirectional per-block text flow (`dir="auto"`) and crisp Cairo typography.
+- **Arabic Starter Templates**: Pre-configured Arabic meeting notes, journals, and task boards.
+
+### 6. Customization & Themes
+- **Hide & Customize Features**: Toggle off any modules you don't use (Graph, Math, Diagrams, Databases, Vault, Daily Notes, Backlinks, TOC, Templates) in Settings.
+- **In-App Update Checker**: Verify and download new official releases directly from GitHub on demand.
+- **6 Handcrafted Themes**: OLED Pure Black (#000000), Catppuccin Mocha, Nord Arctic, Warm Sepia, Classic Light, and Modern Dark.
 
 ---
 

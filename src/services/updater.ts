@@ -16,7 +16,7 @@ export interface UpdateCheckResult {
   error?: string;
 }
 
-export const CURRENT_VERSION = '1.0.1';
+export const CURRENT_VERSION = '1.1.0';
 
 // Compare two semver strings like "1.0.2" > "1.0.1"
 function isNewerVersion(latest: string, current: string): boolean {

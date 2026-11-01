@@ -749,7 +749,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>{t('settings', language)}</span>
           </div>
           <span className="text-[10px] font-mono text-indigo-500 bg-indigo-500/10 px-1.5 py-0.5 rounded">
-            v1.0.1
+            v1.1.0
           </span>
         </button>
 
