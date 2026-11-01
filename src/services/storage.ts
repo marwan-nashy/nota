@@ -375,6 +375,12 @@ export function exportPageMarkdown(page: Page): string {
       case 'math':
         md += `$$\n${block.content}\n$$\n\n`;
         break;
+      case 'toc':
+        md += `[TOC]\n\n`;
+        break;
+      case 'diagram':
+        md += `\`\`\`mermaid\n${block.content}\n\`\`\`\n\n`;
+        break;
       default:
         md += `${stripHtml(block.content)}\n\n`;
         break;

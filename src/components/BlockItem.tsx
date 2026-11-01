@@ -1,12 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
 import katex from 'katex';
+import mermaid from 'mermaid';
 import { 
   GripVertical, Plus, ChevronRight, Check, Copy, CheckCheck, Trash2, 
-  ArrowRightLeft, AlertCircle, Sparkles, Image as ImageIcon, Link as LinkIcon, ExternalLink
+  ArrowRightLeft, AlertCircle, Sparkles, Image as ImageIcon, Link as LinkIcon, 
+  ExternalLink, ListTree, ArrowUp, ArrowDown, Workflow
 } from 'lucide-react';
 import { Block, BlockType, Database } from '../types';
 import { DatabaseView } from './DatabaseView';
 import { t, Language } from '../i18n';
+
+try {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'neutral',
+    securityLevel: 'loose',
+    suppressErrorRendering: true,
+  });
+} catch (e) {
+  // ignore init errors
+}
 
 function renderKaTeX(tex: string): string {
   const formula = tex && tex.trim() ? tex : 'E = mc^2';
@@ -28,6 +41,7 @@ interface BlockItemProps {
   targetPageTitle?: string;
   targetPageIcon?: string;
   language?: Language;
+  allBlocks?: Block[];
   onUpdateBlock: (updated: Block) => void;
   onAddBlockBelow: (currentId: string, type?: BlockType) => void;
   onDeleteBlock: (id: string) => void;
@@ -37,6 +51,13 @@ interface BlockItemProps {
   onOpenSlashMenu: (pos: { top: number; left: number }, query: string, blockId: string) => void;
   onNavigateToPage?: (pageId: string) => void;
   onUpdateDatabase?: (db: Database) => void;
+  onDragStart?: (index: number) => void;
+  onDragOver?: (index: number) => void;
+  onDragLeave?: () => void;
+  onDrop?: (index: number) => void;
+  onMoveBlock?: (fromIndex: number, toIndex: number) => void;
+  isDragOver?: boolean;
+  isDragging?: boolean;
 }
 
 export const BlockItem: React.FC<BlockItemProps> = ({
@@ -47,6 +68,7 @@ export const BlockItem: React.FC<BlockItemProps> = ({
   targetPageTitle,
   targetPageIcon,
   language = 'en',
+  allBlocks,
   onUpdateBlock,
   onAddBlockBelow,
   onDeleteBlock,
@@ -56,12 +78,46 @@ export const BlockItem: React.FC<BlockItemProps> = ({
   onOpenSlashMenu,
   onNavigateToPage,
   onUpdateDatabase,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onMoveBlock,
+  isDragOver,
+  isDragging,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [diagramSvg, setDiagramSvg] = useState<string>('');
+  const [diagramError, setDiagramError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Render Mermaid diagrams
+  useEffect(() => {
+    if (block.type !== 'diagram') return;
+    let isCancelled = false;
+    const code = (block.content && block.content.trim())
+      ? block.content.trim()
+      : 'graph TD;\n  A[Start] --> B{Process};\n  B -->|Yes| C[Success];\n  B -->|No| D[Retry];';
+    const id = 'mermaid-' + block.id.replace(/[^a-zA-Z0-9]/g, '') + '-' + Math.floor(Math.random() * 1000);
+
+    mermaid.render(id, code)
+      .then((res) => {
+        if (!isCancelled) {
+          setDiagramSvg(res.svg);
+          setDiagramError(null);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setDiagramError(err?.message || 'Invalid Mermaid syntax');
+        }
+      });
+
+    return () => { isCancelled = true; };
+  }, [block.type, block.content]);
 
   // Sync content with ref
   useEffect(() => {
@@ -303,7 +359,22 @@ export const BlockItem: React.FC<BlockItemProps> = ({
   }
 
   return (
-    <div className="relative group/block flex items-start py-1 min-h-[30px]">
+    <div
+      id={`block-${block.id}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        onDragOver?.(index);
+      }}
+      onDragLeave={() => onDragLeave?.()}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop?.(index);
+      }}
+      className={`relative group/block flex items-start py-1 min-h-[30px] transition-all ${
+        isDragOver ? 'border-t-2 border-indigo-500 pt-2' : ''
+      } ${isDragging ? 'opacity-30' : ''}`}
+    >
       {/* Left Hover Handle Buttons */}
       <div className="absolute -left-14 rtl:-right-14 rtl:left-auto top-1.5 opacity-0 group-hover/block:opacity-100 flex items-center gap-0.5 text-gray-400 transition-opacity select-none z-20">
         <button
@@ -313,13 +384,19 @@ export const BlockItem: React.FC<BlockItemProps> = ({
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
-        <button
+        <div
+          draggable={true}
+          onDragStart={(e) => {
+            e.dataTransfer.setData('text/plain', block.id);
+            e.dataTransfer.effectAllowed = 'move';
+            onDragStart?.(index);
+          }}
           onClick={() => setShowMenu(!showMenu)}
-          className="p-1 rounded hover:bg-[#efefee] dark:hover:bg-[#2e2e2e] hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-          title="Drag to move or click for options"
+          className="p-1 rounded hover:bg-[#efefee] dark:hover:bg-[#2e2e2e] hover:text-gray-700 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing"
+          title={t('dragToReorder', language)}
         >
           <GripVertical className="w-3.5 h-3.5" />
-        </button>
+        </div>
       </div>
 
       {/* Block Options Dropdown Menu */}
@@ -378,6 +455,47 @@ export const BlockItem: React.FC<BlockItemProps> = ({
             <span>{t('blockMath', language)}</span>
             <span className="font-mono text-xs font-bold text-indigo-500">∑</span>
           </button>
+          <button
+            onClick={() => {
+              onUpdateBlock({
+                ...block,
+                type: 'diagram',
+                content: block.content || 'graph TD;\n  A[Start] --> B{Process};\n  B -->|Yes| C[Success];\n  B -->|No| D[Retry];'
+              });
+              setShowMenu(false);
+            }}
+            className="w-full text-start px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 flex items-center justify-between cursor-pointer"
+          >
+            <span>{t('blockDiagram', language)}</span>
+            <Workflow className="w-3.5 h-3.5 text-emerald-500" />
+          </button>
+          <button
+            onClick={() => { onUpdateBlock({ ...block, type: 'toc' }); setShowMenu(false); }}
+            className="w-full text-start px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 flex items-center justify-between cursor-pointer"
+          >
+            <span>{t('blockToc', language)}</span>
+            <ListTree className="w-3.5 h-3.5 text-cyan-500" />
+          </button>
+
+          {/* Reordering shortcuts */}
+          <div className="my-1 border-t border-gray-100 dark:border-[#383838]"></div>
+          {index > 0 && (
+            <button
+              onClick={() => { onMoveBlock?.(index, index - 1); setShowMenu(false); }}
+              className="w-full text-start px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <ArrowUp className="w-3.5 h-3.5 text-gray-400" /> {t('moveUp', language)}
+            </button>
+          )}
+          {allBlocks && index < allBlocks.length - 1 && (
+            <button
+              onClick={() => { onMoveBlock?.(index, index + 1); setShowMenu(false); }}
+              className="w-full text-start px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <ArrowDown className="w-3.5 h-3.5 text-gray-400" /> {t('moveDown', language)}
+            </button>
+          )}
+
           <div className="my-1 border-t border-gray-100 dark:border-[#383838]"></div>
           <button
             onClick={() => { onDeleteBlock(block.id); setShowMenu(false); }}
@@ -503,6 +621,91 @@ export const BlockItem: React.FC<BlockItemProps> = ({
                 className="flex-1 font-mono text-xs bg-transparent border-none outline-none text-indigo-600 dark:text-indigo-400 placeholder-gray-400 focus:ring-0"
               />
             </div>
+          </div>
+        ) : block.type === 'diagram' ? (
+          <div className="my-2 rounded-xl p-3.5 bg-gray-50/80 dark:bg-[#1a1b26] border border-gray-200 dark:border-[#2e3146] shadow-xs group/diagram transition-all">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-200 dark:border-[#2a2d3d] text-[10px] font-mono uppercase text-gray-400 select-none">
+              <span className="flex items-center gap-1.5 font-semibold text-emerald-500 dark:text-emerald-400">
+                <Workflow className="w-4 h-4" />
+                <span>{t('blockDiagram', language)}</span>
+              </span>
+              <span className="text-[10px] text-gray-400 bg-gray-200/50 dark:bg-[#282a3a] px-2 py-0.5 rounded">Mermaid</span>
+            </div>
+
+            {/* Rendered SVG Preview */}
+            <div className="py-4 px-2 overflow-x-auto flex items-center justify-center min-h-[100px] bg-white dark:bg-[#12131c] rounded-lg border border-gray-100 dark:border-[#242636]">
+              {diagramError ? (
+                <div className="p-3 text-rose-500 font-mono text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{diagramError}</span>
+                </div>
+              ) : diagramSvg ? (
+                <div
+                  className="max-w-full overflow-x-auto"
+                  dangerouslySetInnerHTML={{ __html: diagramSvg }}
+                />
+              ) : (
+                <span className="text-gray-400 text-xs italic">Rendering diagram...</span>
+              )}
+            </div>
+
+            {/* Source Code Editor */}
+            <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-[#2a2d3d]">
+              <textarea
+                dir="ltr"
+                rows={3}
+                value={block.content || ''}
+                onChange={(e) => onUpdateBlock({ ...block, content: e.target.value })}
+                placeholder={t('diagramPlaceholder', language)}
+                className="w-full font-mono text-xs p-2 bg-transparent border border-gray-200 dark:border-[#2a2d3d] rounded-lg outline-none text-emerald-600 dark:text-emerald-400 placeholder-gray-400 focus:ring-1 focus:ring-emerald-500 resize-y"
+              />
+            </div>
+          </div>
+        ) : block.type === 'toc' ? (
+          <div className="my-2 p-3.5 rounded-xl border border-gray-200 dark:border-[#2e2e2e] bg-gray-50/70 dark:bg-[#202020] text-xs">
+            <div className="flex items-center gap-2 mb-2.5 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider select-none text-[11px]">
+              <ListTree className="w-4 h-4 text-cyan-500" />
+              <span>{t('tableOfContents', language)}</span>
+            </div>
+            {(() => {
+              const headings = (allBlocks || [])
+                .filter((b) => b.type === 'heading1' || b.type === 'heading2' || b.type === 'heading3')
+                .map((b) => ({
+                  id: b.id,
+                  type: b.type,
+                  text: (b.content || '').replace(/<[^>]*>/g, '').trim() || (b.type === 'heading1' ? 'Heading 1' : b.type === 'heading2' ? 'Heading 2' : 'Heading 3'),
+                }));
+              if (headings.length === 0) {
+                return <p className="text-gray-400 italic text-xs py-1">{t('noHeadingsFound', language)}</p>;
+              }
+              return (
+                <div className="space-y-1">
+                  {headings.map((h, i) => (
+                    <button
+                      key={`${h.id}-${i}`}
+                      onClick={() => {
+                        const el = document.getElementById(`block-${h.id}`);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          el.classList.add('ring-2', 'ring-indigo-500', 'rounded-lg');
+                          setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-500', 'rounded-lg'), 1500);
+                        }
+                      }}
+                      className={`w-full text-start flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-white dark:hover:bg-[#282828] hover:shadow-2xs transition-all cursor-pointer ${
+                        h.type === 'heading1'
+                          ? 'font-bold text-[#37352f] dark:text-white'
+                          : h.type === 'heading2'
+                          ? 'ps-4 font-medium text-gray-700 dark:text-gray-300'
+                          : 'ps-8 text-gray-500 dark:text-gray-400 text-[11px]'
+                      }`}
+                    >
+                      <span className="text-cyan-500/80 font-mono text-[10px] select-none">•</span>
+                      <span className="truncate">{h.text}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div

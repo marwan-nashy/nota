@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Menu, Star, MoreHorizontal, Download, Trash2, Maximize2, Minimize2, 
-  Type, Check, FileText, Printer, Code, Share2
+  Type, Check, FileText, Printer, Code, Share2, Lock, Unlock, ListTree
 } from 'lucide-react';
 import { Page } from '../types';
 import { exportPageMarkdown } from '../services/storage';
@@ -11,7 +11,10 @@ interface NavbarProps {
   page: Page;
   sidebarOpen: boolean;
   language: Language;
+  isOutlineOpen?: boolean;
   onToggleSidebar: () => void;
+  onToggleOutline?: () => void;
+  onOpenLockModal?: () => void;
   onUpdatePage: (updated: Page) => void;
   onDeletePage: (id: string) => void;
 }
@@ -20,7 +23,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   page,
   sidebarOpen,
   language,
+  isOutlineOpen,
   onToggleSidebar,
+  onToggleOutline,
+  onOpenLockModal,
   onUpdatePage,
   onDeletePage,
 }) => {
@@ -99,6 +105,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
+        {/* Document Outline Toggle */}
+        <button
+          onClick={onToggleOutline}
+          className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            isOutlineOpen
+              ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c]'
+          }`}
+          title={t('outline', language)}
+        >
+          <ListTree className="w-4 h-4" />
+        </button>
+
+        {/* Lock / Vault Status */}
+        <button
+          onClick={onOpenLockModal}
+          className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            page.isLocked
+              ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/30'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c]'
+          }`}
+          title={page.isLocked ? t('unlockPage', language) : t('lockPage', language)}
+        >
+          {page.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+        </button>
+
         {/* Star / Favorite */}
         <button
           onClick={() => onUpdatePage({ ...page, isFavorite: !page.isFavorite })}
@@ -167,6 +199,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Layout Toggles */}
               <div className="space-y-0.5">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onOpenLockModal?.();
+                  }}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{page.isLocked ? t('unlockPage', language) : t('lockPage', language)}</span>
+                  </span>
+                </button>
                 <button
                   onClick={() => onUpdatePage({ ...page, fullWidth: !page.fullWidth })}
                   className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"

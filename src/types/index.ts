@@ -12,6 +12,8 @@ export type BlockType =
   | 'callout'
   | 'code'
   | 'math'
+  | 'diagram'
+  | 'toc'
   | 'image'
   | 'database'
   | 'page_link';
@@ -72,6 +74,12 @@ export interface Page {
   font: 'sans' | 'serif' | 'mono';
   fullWidth: boolean;
   smallText: boolean;
+  isLocked?: boolean;
+  encryptedData?: string;
+  salt?: string;
+  iv?: string;
+  isDailyNote?: boolean;
+  dateString?: string;
 }
 
 export interface Workspace {

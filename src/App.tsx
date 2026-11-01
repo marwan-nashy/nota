@@ -11,7 +11,10 @@ import { CommandPalette } from './components/CommandPalette';
 import { TrashModal } from './components/TrashModal';
 import { FloatingToolbar } from './components/FloatingToolbar';
 import { TemplatesModal } from './components/TemplatesModal';
-import { Plus, Link as LinkIcon } from 'lucide-react';
+import { GraphView } from './components/GraphView';
+import { LockModal } from './components/LockModal';
+import { OutlineDrawer } from './components/OutlineDrawer';
+import { Plus, Link as LinkIcon, Lock, KeyRound } from 'lucide-react';
 import { t, Language } from './i18n';
 
 export function App() {
@@ -31,6 +34,11 @@ export function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isGraphViewOpen, setIsGraphViewOpen] = useState(false);
+  const [isLockModalOpen, setIsLockModalOpen] = useState(false);
+  const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+  const [draggedBlockIdx, setDraggedBlockIdx] = useState<number | null>(null);
+  const [dragOverBlockIdx, setDragOverBlockIdx] = useState<number | null>(null);
 
   const language: Language = workspaceState.language || 'en';
 
@@ -267,6 +275,136 @@ export function App() {
       ...ws,
       pages: { ...ws.pages, [updated.id]: updated },
     }));
+  };
+
+  // Reorder Blocks via Drag-and-Drop or Move Actions
+  const handleMoveBlock = (fromIndex: number, toIndex: number) => {
+    if (!activePage || fromIndex === toIndex) return;
+    const newBlocks = [...activePage.blocks];
+    const [moved] = newBlocks.splice(fromIndex, 1);
+    newBlocks.splice(toIndex, 0, moved);
+    handleUpdatePage({
+      ...activePage,
+      blocks: newBlocks,
+      updatedAt: Date.now(),
+    });
+  };
+
+  // Open or Create Today's Daily Note
+  const handleOpenDailyNote = () => {
+    if (!currentWorkspace) return;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const existing = Object.values(currentWorkspace.pages).find(
+      (p) => !p.isArchived && (p.dateString === todayStr || (p.title && p.title.includes(todayStr)))
+    );
+    if (existing) {
+      handleSelectPage(existing.id);
+    } else {
+      const newId = 'page-' + nanoid(8);
+      const dateFormatted = new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+      const newPage: Page = {
+        id: newId,
+        parentId: null,
+        title: dateFormatted,
+        icon: '📅',
+        cover: null,
+        isFavorite: false,
+        isArchived: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        font: 'sans',
+        fullWidth: false,
+        smallText: false,
+        isDailyNote: true,
+        dateString: todayStr,
+        blocks: [
+          { id: 'b-' + nanoid(6), type: 'heading2', content: language === 'ar' ? '🎯 أولويات اليوم' : '🎯 Daily Priorities' },
+          { id: 'b-' + nanoid(6), type: 'todo', content: language === 'ar' ? 'أهم هدف لإنجازه اليوم' : 'Key goal for today', checked: false },
+          { id: 'b-' + nanoid(6), type: 'heading2', content: language === 'ar' ? '📝 ملاحظات وأفكار' : '📝 Notes & Thoughts' },
+          { id: 'b-' + nanoid(6), type: 'paragraph', content: '' },
+          { id: 'b-' + nanoid(6), type: 'heading2', content: language === 'ar' ? '✨ تأملات اليوم' : '✨ Daily Reflection' },
+          { id: 'b-' + nanoid(6), type: 'bullet', content: language === 'ar' ? 'ما الذي سار بشكل جيد اليوم؟' : 'What went well today?' },
+        ],
+      };
+      updateCurrentWorkspace((ws) => ({
+        ...ws,
+        pages: { ...ws.pages, [newId]: newPage },
+        activePageId: newId,
+      }));
+    }
+  };
+
+  // Open or Create Note for specific calendar date
+  const handleSelectDate = (dateStr: string) => {
+    if (!currentWorkspace) return;
+    const existing = Object.values(currentWorkspace.pages).find(
+      (p) => !p.isArchived && (p.dateString === dateStr || (p.title && p.title.includes(dateStr)))
+    );
+    if (existing) {
+      handleSelectPage(existing.id);
+    } else {
+      const parts = dateStr.split('-');
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const dateFormatted = d.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+      const newId = 'page-' + nanoid(8);
+      const newPage: Page = {
+        id: newId,
+        parentId: null,
+        title: dateFormatted,
+        icon: '📅',
+        cover: null,
+        isFavorite: false,
+        isArchived: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        font: 'sans',
+        fullWidth: false,
+        smallText: false,
+        isDailyNote: true,
+        dateString: dateStr,
+        blocks: [
+          { id: 'b-' + nanoid(6), type: 'heading2', content: language === 'ar' ? '🎯 ملاحظات وتفاصيل' : '🎯 Notes & Agenda' },
+          { id: 'b-' + nanoid(6), type: 'todo', content: '', checked: false },
+        ],
+      };
+      updateCurrentWorkspace((ws) => ({
+        ...ws,
+        pages: { ...ws.pages, [newId]: newPage },
+        activePageId: newId,
+      }));
+    }
+  };
+
+  // Handle Unlocked Page
+  const handlePageUnlocked = (decryptedBlocks: Block[], removePermanently = false) => {
+    if (!activePage) return;
+    if (removePermanently) {
+      handleUpdatePage({
+        ...activePage,
+        isLocked: false,
+        encryptedData: undefined,
+        salt: undefined,
+        iv: undefined,
+        blocks: decryptedBlocks,
+        updatedAt: Date.now(),
+      });
+    } else {
+      handleUpdatePage({
+        ...activePage,
+        blocks: decryptedBlocks,
+        updatedAt: Date.now(),
+      });
+    }
   };
 
   const handleDeletePage = (id: string) => {
@@ -539,7 +677,7 @@ export function App() {
       handleUpdateBlock({
         id: slashMenuState.blockId,
         type,
-        content: '',
+        content: extra?.content || (type === 'math' ? 'E = mc^2' : type === 'diagram' ? 'graph TD;\n  A[Start] --> B{Process};\n  B -->|Yes| C[Success];\n  B -->|No| D[Retry];' : ''),
       });
     }
 
@@ -603,6 +741,9 @@ export function App() {
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
         onOpenTrash={() => setIsTrashOpen(true)}
         onOpenTemplates={() => setIsTemplatesOpen(true)}
+        onOpenGraphView={() => setIsGraphViewOpen(true)}
+        onOpenDailyNote={handleOpenDailyNote}
+        onSelectDate={handleSelectDate}
         onExportWorkspace={handleExportWorkspace}
         onImportWorkspace={handleImportWorkspace}
         onCloseSidebar={() => setWorkspaceState((prev) => ({ ...prev, sidebarOpen: false }))}
@@ -621,9 +762,12 @@ export function App() {
               page={activePage}
               sidebarOpen={workspaceState.sidebarOpen}
               language={language}
+              isOutlineOpen={isOutlineOpen}
               onToggleSidebar={() =>
                 setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
               }
+              onToggleOutline={() => setIsOutlineOpen(!isOutlineOpen)}
+              onOpenLockModal={() => setIsLockModalOpen(true)}
               onUpdatePage={handleUpdatePage}
               onDeletePage={handleDeletePage}
             />
@@ -640,29 +784,63 @@ export function App() {
                 {/* Page Cover & Title */}
                 <PageHeader page={activePage} language={language} onUpdatePage={handleUpdatePage} />
 
-                {/* Blocks List */}
-                <div className="px-2 sm:px-8 space-y-0.5">
-                  {activePage.blocks.map((block, idx) => (
-                    <BlockItem
-                      key={block.id}
-                      block={block}
-                      index={idx}
-                      language={language}
-                      isFocused={focusedBlockId === block.id}
-                      database={block.databaseId ? currentWorkspace?.databases[block.databaseId] : undefined}
-                      targetPageTitle={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].title : undefined}
-                      targetPageIcon={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].icon : undefined}
-                      onUpdateBlock={handleUpdateBlock}
-                      onAddBlockBelow={handleAddBlockBelow}
-                      onDeleteBlock={handleDeleteBlock}
-                      onFocusBlock={(id) => setFocusedBlockId(id)}
-                      onFocusPrevious={handleFocusPrevious}
-                      onFocusNext={handleFocusNext}
-                      onOpenSlashMenu={handleOpenSlashMenu}
-                      onNavigateToPage={(pageId) => handleSelectPage(pageId)}
-                      onUpdateDatabase={handleUpdateDatabase}
-                    />
-                  ))}
+                {/* Locked Page Encrypted Screen or Blocks List */}
+                {activePage.isLocked && (!activePage.blocks || activePage.blocks.length === 0) ? (
+                  <div className="py-20 flex flex-col items-center justify-center text-center px-4">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-4 shadow-lg shadow-amber-500/10">
+                      <Lock className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      {t('pageLocked', language)}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-6 leading-relaxed">
+                      {t('pageIsLockedDesc', language)}
+                    </p>
+                    <button
+                      onClick={() => setIsLockModalOpen(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>{t('unlockPage', language)}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="px-2 sm:px-8 space-y-0.5">
+                    {activePage.blocks.map((block, idx) => (
+                      <BlockItem
+                        key={block.id}
+                        block={block}
+                        index={idx}
+                        language={language}
+                        allBlocks={activePage.blocks}
+                        isFocused={focusedBlockId === block.id}
+                        database={block.databaseId ? currentWorkspace?.databases[block.databaseId] : undefined}
+                        targetPageTitle={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].title : undefined}
+                        targetPageIcon={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].icon : undefined}
+                        onUpdateBlock={handleUpdateBlock}
+                        onAddBlockBelow={handleAddBlockBelow}
+                        onDeleteBlock={handleDeleteBlock}
+                        onFocusBlock={(id) => setFocusedBlockId(id)}
+                        onFocusPrevious={handleFocusPrevious}
+                        onFocusNext={handleFocusNext}
+                        onOpenSlashMenu={handleOpenSlashMenu}
+                        onNavigateToPage={(pageId) => handleSelectPage(pageId)}
+                        onUpdateDatabase={handleUpdateDatabase}
+                        onDragStart={(i) => setDraggedBlockIdx(i)}
+                        onDragOver={(i) => setDragOverBlockIdx(i)}
+                        onDragLeave={() => setDragOverBlockIdx(null)}
+                        onDrop={(targetIdx) => {
+                          if (draggedBlockIdx !== null && draggedBlockIdx !== targetIdx) {
+                            handleMoveBlock(draggedBlockIdx, targetIdx);
+                          }
+                          setDraggedBlockIdx(null);
+                          setDragOverBlockIdx(null);
+                        }}
+                        onMoveBlock={handleMoveBlock}
+                        isDragOver={dragOverBlockIdx === idx}
+                        isDragging={draggedBlockIdx === idx}
+                      />
+                    ))}
 
                   {/* Linked References / Backlinks Section */}
                   {backlinks.length > 0 && (
@@ -706,6 +884,7 @@ export function App() {
                     <span>{t('clickToAddBlock', language)}</span>
                   </div>
                 </div>
+              )}
               </div>
             </div>
           </>
@@ -767,6 +946,39 @@ export function App() {
         onRestorePage={handleRestorePage}
         onPermanentDeletePage={handlePermanentDeletePage}
       />
+
+      {/* Visual Interactive Knowledge Graph (Obsidian-Style) */}
+      <GraphView
+        isOpen={isGraphViewOpen}
+        pages={currentWorkspace?.pages || {}}
+        activePageId={currentWorkspace?.activePageId || ''}
+        theme={workspaceState.theme}
+        language={language}
+        onClose={() => setIsGraphViewOpen(false)}
+        onSelectPage={handleSelectPage}
+      />
+
+      {/* AES-256 Vault / Lock Modal */}
+      {activePage && (
+        <LockModal
+          isOpen={isLockModalOpen}
+          page={activePage}
+          language={language}
+          onClose={() => setIsLockModalOpen(false)}
+          onPageLocked={(updated) => handleUpdatePage(updated)}
+          onPageUnlocked={handlePageUnlocked}
+        />
+      )}
+
+      {/* Sticky Document Outline Drawer */}
+      {activePage && (
+        <OutlineDrawer
+          isOpen={isOutlineOpen}
+          page={activePage}
+          language={language}
+          onClose={() => setIsOutlineOpen(false)}
+        />
+      )}
     </div>
   );
 }

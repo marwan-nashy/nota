@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   Type, Heading1, Heading2, Heading3, CheckSquare, List, ListOrdered, 
   ChevronRight, Quote, Minus, AlertCircle, Code, Table, Kanban,
-  Image as ImageIcon, FileText, Sparkles
+  Image as ImageIcon, FileText, Sparkles, ListTree, Workflow
 } from 'lucide-react';
 import { BlockType } from '../types';
 import { t, Language } from '../i18n';
@@ -140,6 +140,21 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       label: t('blockMath', language),
       description: t('blockMathDesc', language),
       icon: <span className="w-4 h-4 flex items-center justify-center font-bold font-mono text-sm text-indigo-500">∑</span>,
+      category: t('catAdvanced', language),
+    },
+    {
+      type: 'diagram',
+      label: t('blockDiagram', language),
+      description: t('blockDiagramDesc', language),
+      icon: <Workflow className="w-4 h-4 text-emerald-500" />,
+      category: t('catAdvanced', language),
+      extra: { content: 'graph TD;\n  A[Start] --> B{Process};\n  B -->|Yes| C[Success];\n  B -->|No| D[Retry];' },
+    },
+    {
+      type: 'toc',
+      label: t('blockToc', language),
+      description: t('blockTocDesc', language),
+      icon: <ListTree className="w-4 h-4 text-cyan-500" />,
       category: t('catAdvanced', language),
     },
     {

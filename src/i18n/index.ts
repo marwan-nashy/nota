@@ -105,6 +105,15 @@ export const translations = {
     blockCodeDesc: 'Syntax highlighted code snippet.',
     blockMath: 'Math Equation',
     blockMathDesc: 'Display clean LaTeX formulas & equations.',
+    blockDiagram: 'Mermaid Diagram',
+    blockDiagramDesc: 'Flowcharts, sequence diagrams & mindmaps from text.',
+    diagramPlaceholder: 'Type Mermaid diagram syntax (e.g. flowchart LR\\n  A --> B)...',
+    graphView: 'Knowledge Graph',
+    blockToc: 'Table of Contents',
+    blockTocDesc: 'Interactive outline generated from page headings.',
+    tableOfContents: 'Table of Contents',
+    outline: 'Outline',
+    noHeadingsFound: 'No headings found on this page',
     mathPlaceholder: 'Type LaTeX formula (e.g. E = mc^2 or \\int_{0}^{\\infty} x dx)...',
     mathError: 'Invalid LaTeX formula',
     blockTable: 'Table View',
@@ -189,6 +198,36 @@ export const translations = {
     underline: 'Underline',
     strikethrough: 'Strikethrough',
     color: 'Color',
+
+    // Vault & Security
+    lockPage: 'Lock Page (AES-256)',
+    unlockPage: 'Unlock Page',
+    pageLocked: 'Encrypted & Locked',
+    pageIsLockedDesc: 'This page is protected with 256-bit AES-GCM encryption. Enter your password to view and edit.',
+    enterPasswordToUnlock: 'Enter password to decrypt and view blocks.',
+    enterPassword: 'Enter password...',
+    setPassword: 'Set Encryption Password',
+    setPasswordDesc: 'Enter a strong password. Without this password, your notes cannot be recovered.',
+    confirmPassword: 'Confirm password...',
+    passwordsDoNotMatch: 'Passwords do not match',
+    incorrectPassword: 'Incorrect password. Decryption failed.',
+    unlock: 'Unlock',
+    lock: 'Lock',
+    removeLock: 'Remove Encryption',
+    pageEncryptedSuccess: 'Page encrypted and locked successfully.',
+
+    // Daily Note & Calendar
+    dailyNote: 'Daily Note',
+    today: 'Today',
+    calendar: 'Calendar',
+    openToday: "Open Today's Note",
+    noNoteForDate: 'No note for this date',
+    createNoteForDate: 'Create note for this date',
+
+    // Drag & Drop
+    dragToReorder: 'Drag to reorder block',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
   },
 
   ar: {
@@ -295,6 +334,15 @@ export const translations = {
     blockCodeDesc: 'كود برمجي مع تمييز دقيق للصيغة.',
     blockMath: 'معادلة رياضية',
     blockMathDesc: 'عرض معادلات وصيغ رياضية متقدمة بـ LaTeX.',
+    blockDiagram: 'مخطط انسيابي (Mermaid)',
+    blockDiagramDesc: 'مخططات بيانية ومعمارية وانسيابية تُبنى من النص.',
+    diagramPlaceholder: 'اكتب كود Mermaid (مثال: flowchart LR\\n  A --> B)...',
+    graphView: 'شبكة الأفكار المرئية',
+    blockToc: 'فهرس المحتويات',
+    blockTocDesc: 'مخطط تفاعلي يتم إنشاؤه تلقائياً من عناوين الصفحة.',
+    tableOfContents: 'فهرس المحتويات',
+    outline: 'مخطط المستند',
+    noHeadingsFound: 'لا توجد عناوين في هذه الصفحة بعد',
     mathPlaceholder: 'اكتب معادلة LaTeX (مثال: E = mc^2 أو \\int_{0}^{\\infty} x dx)...',
     mathError: 'صيغة LaTeX غير صالحة',
     blockTable: 'جدول بيانات',
@@ -379,6 +427,36 @@ export const translations = {
     underline: 'تسطير',
     strikethrough: 'يتوسطه خط',
     color: 'اللون',
+
+    // Vault & Security
+    lockPage: 'قفل وتشفير الصفحة (AES-256)',
+    unlockPage: 'إلغاء قفل الصفحة',
+    pageLocked: 'صفحة مشفرة ومقفلة',
+    pageIsLockedDesc: 'هذه الصفحة محمية بتشفير 256-bit AES-GCM القوي. أدخل كلمة المرور للعرض والتحرير.',
+    enterPasswordToUnlock: 'أدخل كلمة المرور لفك التشفير وعرض المحتوى.',
+    enterPassword: 'أدخل كلمة المرور...',
+    setPassword: 'تعيين كلمة مرور التشفير',
+    setPasswordDesc: 'أدخل كلمة مرور قوية. لن تتمكن من استرجاع الملاحظات بدونها.',
+    confirmPassword: 'تأكيد كلمة المرور...',
+    passwordsDoNotMatch: 'كلمات المرور غير متطابقة',
+    incorrectPassword: 'كلمة المرور غير صحيحة. فشل فك التشفير.',
+    unlock: 'فتح القفل',
+    lock: 'قفل',
+    removeLock: 'إزالة التشفير',
+    pageEncryptedSuccess: 'تم تشفير وقفل الصفحة بنجاح.',
+
+    // Daily Note & Calendar
+    dailyNote: 'المذكرة اليومية',
+    today: 'اليوم',
+    calendar: 'التقويم',
+    openToday: 'فتح مذكرة اليوم',
+    noNoteForDate: 'لا توجد مذكرة لهذا اليوم',
+    createNoteForDate: 'إنشاء مذكرة لهذا اليوم',
+
+    // Drag & Drop
+    dragToReorder: 'اسحب لإعادة ترتيب الكتلة',
+    moveUp: 'تحريك لأعلى',
+    moveDown: 'تحريك لأسفل',
   }
 };
 
