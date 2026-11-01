@@ -7,7 +7,8 @@
 
 A lightweight, zero-bloat, open-source personal workspace designed specifically to run flawlessly on low-spec "potato PCs" (low RAM, integrated Intel GPUs, dual-core CPUs) without Electron runtime overhead.
 
-🌐 **Live Website**: [https://marwan-nashy.github.io/nota/](https://marwan-nashy.github.io/nota/)
+🌐 **Live Website**: [https://marwan-nashy.github.io/nota/](https://marwan-nashy.github.io/nota/)  
+🚀 **Live Web App (Try in Browser)**: [https://marwan-nashy.github.io/nota/app/](https://marwan-nashy.github.io/nota/app/)
 
 
 ## Architectural Core Principles

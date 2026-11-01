@@ -11,8 +11,9 @@ src-tauri/target/
 target/
 Cargo.lock
 
-# Standalone binary executable
+# Standalone binary executable & packages
 *.exe
+*.zip
 
 # System & Editor files
 .DS_Store
