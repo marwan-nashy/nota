@@ -27,7 +27,7 @@
     "targets": "all",
     "shortDescription": "Ultra-lightweight modular workspace (<35MB RAM)",
     "longDescription": "A blazingly fast, zero-bloat, local-first personal workspace and relational database built with Tauri v2 and React 19.",
-    "category": "Office",
+    "category": "Productivity",
     "copyright": "Copyright (c) 2026 Marwan Nashy",
     "icon": [
       "icons/32x32.png",
