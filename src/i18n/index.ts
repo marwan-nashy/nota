@@ -103,19 +103,35 @@ export const translations = {
     blockDividerDesc: 'Visually divide sections with a clean line.',
     blockCode: 'Code block',
     blockCodeDesc: 'Syntax highlighted code snippet.',
+    blockMath: 'Math Equation',
+    blockMathDesc: 'Display clean LaTeX formulas & equations.',
+    mathPlaceholder: 'Type LaTeX formula (e.g. E = mc^2 or \\int_{0}^{\\infty} x dx)...',
+    mathError: 'Invalid LaTeX formula',
     blockTable: 'Table View',
     blockTableDesc: 'Structured relational data grid.',
     blockBoard: 'Kanban Board',
     blockBoardDesc: 'Card pipeline drag and drop board.',
+    blockGallery: 'Gallery View',
+    blockGalleryDesc: 'Visual card grid with cover previews.',
     catBasic: 'Basic',
     catLists: 'Lists',
     catMedia: 'Media',
     catDatabase: 'Database',
     catAdvanced: 'Advanced',
 
+    // Themes
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeOled: 'OLED Pure Black',
+    themeCatppuccin: 'Catppuccin Pastel',
+    themeNord: 'Nord Arctic',
+    themeSepia: 'Warm Paper',
+
     // Database
     tableView: 'Table View',
     boardView: 'Board View',
+    galleryView: 'Gallery View',
     addColumn: 'Add column',
     columnName: 'Column name...',
     newRow: 'New row',
@@ -133,6 +149,14 @@ export const translations = {
     high: 'High',
     itemsCount: 'items',
     untitledCard: 'Untitled card',
+    filterStatus: 'Status Filter',
+    all: 'All',
+    totalRows: 'Total items',
+    completed: 'Completed',
+
+    // Backlinks
+    backlinks: 'Backlinks & Linked References',
+    noBacklinks: 'No other pages link to this document yet',
 
     // Command Palette
     quickSwitcher: 'Quick Switcher',
@@ -269,19 +293,35 @@ export const translations = {
     blockDividerDesc: 'فصل أقسام الصفحة بخط أفقي أنيق.',
     blockCode: 'كتلة برمجية',
     blockCodeDesc: 'كود برمجي مع تمييز دقيق للصيغة.',
+    blockMath: 'معادلة رياضية',
+    blockMathDesc: 'عرض معادلات وصيغ رياضية متقدمة بـ LaTeX.',
+    mathPlaceholder: 'اكتب معادلة LaTeX (مثال: E = mc^2 أو \\int_{0}^{\\infty} x dx)...',
+    mathError: 'صيغة LaTeX غير صالحة',
     blockTable: 'جدول بيانات',
     blockTableDesc: 'شبكة بيانات مترابطة ومنظمة.',
     blockBoard: 'لوحة كانبان',
     blockBoardDesc: 'لوحة بطاقات لسير العمل تدعم السحب والإفلات.',
+    blockGallery: 'عرض المعرض',
+    blockGalleryDesc: 'شبكة بطاقات مرئية مع معاينات الأغلفة.',
     catBasic: 'الأساسيات',
     catLists: 'القوائم',
     catMedia: 'الوسائط',
     catDatabase: 'قواعد البيانات',
     catAdvanced: 'متقدم',
 
+    // Themes
+    theme: 'المظهر',
+    themeLight: 'فاتح',
+    themeDark: 'داكن',
+    themeOled: 'أسود نقي (OLED)',
+    themeCatppuccin: 'كاتبوشين (باستيل)',
+    themeNord: 'نورد (ثلجي)',
+    themeSepia: 'ورق دافئ (سيبيا)',
+
     // Database
     tableView: 'عرض الجدول',
     boardView: 'لوحة كانبان',
+    galleryView: 'عرض المعرض',
     addColumn: 'إضافة عمود',
     columnName: 'اسم العمود...',
     newRow: 'عنصر جديد',
@@ -299,6 +339,14 @@ export const translations = {
     high: 'عالي',
     itemsCount: 'عنصر',
     untitledCard: 'بطاقة بدون عنوان',
+    filterStatus: 'تصفية الحالة',
+    all: 'الكل',
+    totalRows: 'إجمالي العناصر',
+    completed: 'المكتملة',
+
+    // Backlinks
+    backlinks: 'الروابط والمراجع الواردة',
+    noBacklinks: 'لا توجد صفحات تشير إلى هذا المستند بعد',
 
     // Command Palette
     quickSwitcher: 'البحث السريع والتنقل',

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import katex from 'katex';
 import { 
   GripVertical, Plus, ChevronRight, Check, Copy, CheckCheck, Trash2, 
   ArrowRightLeft, AlertCircle, Sparkles, Image as ImageIcon, Link as LinkIcon, ExternalLink
@@ -6,6 +7,18 @@ import {
 import { Block, BlockType, Database } from '../types';
 import { DatabaseView } from './DatabaseView';
 import { t, Language } from '../i18n';
+
+function renderKaTeX(tex: string): string {
+  const formula = tex && tex.trim() ? tex : 'E = mc^2';
+  try {
+    return katex.renderToString(formula, {
+      throwOnError: false,
+      displayMode: true,
+    });
+  } catch (e: any) {
+    return `<span class="text-rose-500 font-mono text-xs">${e?.message || 'Invalid formula'}</span>`;
+  }
+}
 
 interface BlockItemProps {
   block: Block;
@@ -358,6 +371,13 @@ export const BlockItem: React.FC<BlockItemProps> = ({
           >
             {t('blockCode', language)}
           </button>
+          <button
+            onClick={() => { onUpdateBlock({ ...block, type: 'math', content: block.content || 'E = mc^2' }); setShowMenu(false); }}
+            className="w-full text-start px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 flex items-center justify-between cursor-pointer"
+          >
+            <span>{t('blockMath', language)}</span>
+            <span className="font-mono text-xs font-bold text-indigo-500">∑</span>
+          </button>
           <div className="my-1 border-t border-gray-100 dark:border-[#383838]"></div>
           <button
             onClick={() => { onDeleteBlock(block.id); setShowMenu(false); }}
@@ -452,6 +472,37 @@ export const BlockItem: React.FC<BlockItemProps> = ({
               onFocus={() => onFocusBlock(block.id)}
               className="focus:outline-none whitespace-pre leading-relaxed min-h-[40px] text-left"
             />
+          </div>
+        ) : block.type === 'math' ? (
+          <div className="my-2 rounded-lg p-3.5 bg-gray-50/80 dark:bg-[#202020] border border-gray-200 dark:border-[#303030] shadow-xs group/math transition-all">
+            <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-gray-200 dark:border-[#2e2e2e] text-[10px] font-mono uppercase text-gray-400 select-none">
+              <span className="flex items-center gap-1.5 font-semibold text-indigo-500 dark:text-indigo-400">
+                <span className="text-sm leading-none">∑</span>
+                <span>{t('blockMath', language)}</span>
+              </span>
+              <span className="text-[10px] text-gray-400 bg-gray-200/50 dark:bg-[#2e2e2e] px-1.5 py-0.5 rounded">LaTeX</span>
+            </div>
+            
+            {/* KaTeX live preview rendered output */}
+            <div 
+              className="py-3 px-3 overflow-x-auto text-center flex items-center justify-center min-h-[44px] text-gray-900 dark:text-gray-100 select-text"
+              dangerouslySetInnerHTML={{
+                __html: renderKaTeX(block.content)
+              }}
+            />
+
+            {/* Editable LaTeX source formula input */}
+            <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-[#303030] flex items-center gap-2">
+              <span className="text-gray-400 font-mono text-xs select-none">TeX:</span>
+              <input
+                type="text"
+                dir="ltr"
+                value={block.content || ''}
+                onChange={(e) => onUpdateBlock({ ...block, content: e.target.value })}
+                placeholder={t('mathPlaceholder', language)}
+                className="flex-1 font-mono text-xs bg-transparent border-none outline-none text-indigo-600 dark:text-indigo-400 placeholder-gray-400 focus:ring-0"
+              />
+            </div>
           </div>
         ) : (
           <div

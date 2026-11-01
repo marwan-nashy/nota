@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { nanoid } from 'nanoid';
-import { Block, BlockType, Database, Page, Workspace, WorkspaceState } from './types';
+import { Block, BlockType, Database, Page, Workspace, WorkspaceState, AppTheme } from './types';
 import { loadWorkspace, saveWorkspace, exportWorkspaceJSON } from './services/storage';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -11,7 +11,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { TrashModal } from './components/TrashModal';
 import { FloatingToolbar } from './components/FloatingToolbar';
 import { TemplatesModal } from './components/TemplatesModal';
-import { Plus } from 'lucide-react';
+import { Plus, Link as LinkIcon } from 'lucide-react';
 import { t, Language } from './i18n';
 
 export function App() {
@@ -36,10 +36,14 @@ export function App() {
 
   // Sync theme class to document element
   useEffect(() => {
-    if (workspaceState.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const root = document.documentElement;
+    root.classList.remove('dark', 'theme-oled', 'theme-catppuccin', 'theme-nord', 'theme-sepia');
+    const currentTheme = workspaceState.theme || 'dark';
+    if (currentTheme !== 'light' && currentTheme !== 'sepia') {
+      root.classList.add('dark');
+    }
+    if (currentTheme !== 'dark' && currentTheme !== 'light') {
+      root.classList.add(`theme-${currentTheme}`);
     }
   }, [workspaceState.theme]);
 
@@ -82,6 +86,35 @@ export function App() {
       ? currentWorkspace.pages[currentWorkspace.activePageId] ||
         Object.values(currentWorkspace.pages)[0]
       : null;
+
+  // Calculate backlinks to the current page across the active workspace
+  const backlinks = useMemo(() => {
+    if (!activePage || !currentWorkspace?.pages) return [];
+    const results: { page: Page; snippet: string }[] = [];
+    const pageId = activePage.id;
+    const pageTitle = (activePage.title || '').trim().toLowerCase();
+
+    Object.values(currentWorkspace.pages).forEach((otherPage) => {
+      if (otherPage.id === pageId || otherPage.isArchived) return;
+      for (const b of otherPage.blocks) {
+        if (b.targetPageId === pageId) {
+          results.push({ page: otherPage, snippet: otherPage.title || t('untitled', language) });
+          break;
+        }
+        if (pageTitle && b.content) {
+          const stripped = b.content.replace(/<[^>]*>/g, '').toLowerCase();
+          if (stripped.includes(`@${pageTitle}`) || stripped.includes(`[[${pageTitle}]]`)) {
+            results.push({
+              page: otherPage,
+              snippet: b.content.replace(/<[^>]*>/g, '').slice(0, 100),
+            });
+            break;
+          }
+        }
+      }
+    });
+    return results;
+  }, [activePage?.id, activePage?.title, currentWorkspace?.pages, language]);
 
   // Workspace Operations
   const handleSelectWorkspace = (id: string) => {
@@ -297,11 +330,25 @@ export function App() {
     }));
   };
 
-  // Toggle between dark and light mode
+  const THEMES: AppTheme[] = ['dark', 'oled', 'catppuccin', 'nord', 'sepia', 'light'];
+
+  // Cycle through themes
   const handleToggleTheme = () => {
+    setWorkspaceState((prev) => {
+      const currentIdx = THEMES.indexOf(prev.theme as AppTheme);
+      const nextTheme = THEMES[(currentIdx + 1) % THEMES.length];
+      return {
+        ...prev,
+        theme: nextTheme,
+      };
+    });
+  };
+
+  // Directly select a specific theme
+  const handleSelectTheme = (newTheme: AppTheme) => {
     setWorkspaceState((prev) => ({
       ...prev,
-      theme: prev.theme === 'dark' ? 'light' : 'dark',
+      theme: newTheme,
     }));
   };
 
@@ -617,6 +664,35 @@ export function App() {
                     />
                   ))}
 
+                  {/* Linked References / Backlinks Section */}
+                  {backlinks.length > 0 && (
+                    <div className="mt-10 pt-6 border-t border-gray-200 dark:border-[#2e2e2e]">
+                      <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider select-none">
+                        <LinkIcon className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>{t('backlinks', language)} ({backlinks.length})</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {backlinks.map(({ page, snippet }) => (
+                          <div
+                            key={page.id}
+                            onClick={() => handleSelectPage(page.id)}
+                            className="p-3 rounded-xl border border-gray-200 dark:border-[#2e2e2e] bg-[#fbfbfa] dark:bg-[#202020] hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-1.5 font-semibold text-xs text-[#37352f] dark:text-[#ebebeb] group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                              <span>{page.icon || '📄'}</span>
+                              <span className="truncate">{page.title || t('untitled', language)}</span>
+                            </div>
+                            {snippet && (
+                              <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 italic">
+                                "{snippet}"
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Click to add new block at bottom */}
                   <div
                     onClick={() => {
@@ -677,6 +753,7 @@ export function App() {
         onSelectPage={handleSelectPage}
         onAddPage={() => handleAddPage(null)}
         onToggleTheme={handleToggleTheme}
+        onSelectTheme={handleSelectTheme}
         onToggleLanguage={handleToggleLanguage}
         onExportWorkspace={handleExportWorkspace}
       />

@@ -136,6 +136,13 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       category: t('catAdvanced', language),
     },
     {
+      type: 'math',
+      label: t('blockMath', language),
+      description: t('blockMathDesc', language),
+      icon: <span className="w-4 h-4 flex items-center justify-center font-bold font-mono text-sm text-indigo-500">∑</span>,
+      category: t('catAdvanced', language),
+    },
+    {
       type: 'database',
       label: t('blockTable', language),
       description: t('blockTableDesc', language),
@@ -150,6 +157,14 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       icon: <Kanban className="w-4 h-4 text-pink-500" />,
       category: t('catDatabase', language),
       extra: { view: 'board' },
+    },
+    {
+      type: 'database',
+      label: t('blockGallery', language),
+      description: t('blockGalleryDesc', language),
+      icon: <Sparkles className="w-4 h-4 text-purple-500" />,
+      category: t('catDatabase', language),
+      extra: { view: 'gallery' },
     },
   ], [language]);
 

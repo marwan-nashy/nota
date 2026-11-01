@@ -4,7 +4,7 @@ import {
   Trash2, Moon, Sun, Download, Upload, Cpu, MoreHorizontal, Copy,
   Check, Edit3, Smile, X, Layers, Briefcase, Layout, Languages
 } from 'lucide-react';
-import { Page, Workspace } from '../types';
+import { Page, Workspace, AppTheme } from '../types';
 import { t, Language } from '../i18n';
 
 interface SidebarProps {
@@ -13,7 +13,7 @@ interface SidebarProps {
   pages: Record<string, Page>;
   activePageId: string;
   isOpen: boolean;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   language: Language;
   onSelectPage: (id: string) => void;
   onAddPage: (parentId?: string | null) => void;
@@ -532,13 +532,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={onToggleTheme}
           className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          title="Cycle Theme (Dark, OLED, Catppuccin, Nord, Sepia, Light)"
         >
           <div className="flex items-center gap-2">
-            {theme === 'dark' ? <Moon className="w-3.5 h-3.5 text-blue-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
-            <span>{theme === 'dark' ? t('darkMode', language) : t('lightMode', language)}</span>
+            {theme === 'oled' ? (
+              <span className="w-3.5 h-3.5 flex items-center justify-center text-xs">🖤</span>
+            ) : theme === 'catppuccin' ? (
+              <span className="w-3.5 h-3.5 flex items-center justify-center text-xs">🍧</span>
+            ) : theme === 'nord' ? (
+              <span className="w-3.5 h-3.5 flex items-center justify-center text-xs">❄️</span>
+            ) : theme === 'sepia' ? (
+              <span className="w-3.5 h-3.5 flex items-center justify-center text-xs">📜</span>
+            ) : theme === 'light' ? (
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-blue-400" />
+            )}
+            <span>{t('theme', language)}</span>
           </div>
-          <span className="text-[10px] text-gray-400 uppercase font-mono">
-            {theme === 'dark' ? t('on', language) : t('off', language)}
+          <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+            {theme === 'oled'
+              ? t('themeOled', language)
+              : theme === 'catppuccin'
+              ? t('themeCatppuccin', language)
+              : theme === 'nord'
+              ? t('themeNord', language)
+              : theme === 'sepia'
+              ? t('themeSepia', language)
+              : theme === 'light'
+              ? t('themeLight', language)
+              : t('themeDark', language)}
           </span>
         </button>
 

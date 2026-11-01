@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Plus, Moon, Sun, Download, X, Languages } from 'lucide-react';
-import { Page } from '../types';
+import { Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette } from 'lucide-react';
+import { Page, AppTheme } from '../types';
 import { t, Language } from '../i18n';
 
 interface CommandPaletteProps {
   isOpen: boolean;
   pages: Record<string, Page>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   language?: Language;
   onClose: () => void;
   onSelectPage: (id: string) => void;
   onAddPage: () => void;
   onToggleTheme: () => void;
+  onSelectTheme?: (theme: AppTheme) => void;
   onToggleLanguage?: () => void;
   onExportWorkspace: () => void;
 }
@@ -25,6 +26,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSelectPage,
   onAddPage,
   onToggleTheme,
+  onSelectTheme,
   onToggleLanguage,
   onExportWorkspace,
 }) => {
@@ -73,11 +75,56 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
-      id: 'action-theme',
-      label: theme === 'dark' ? t('switchToLightMode', language) : t('switchToDarkMode', language),
-      icon: theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-blue-500" />,
+      id: 'action-theme-dark',
+      label: `${t('theme', language)}: ${t('themeDark', language)}`,
+      icon: <Moon className="w-4 h-4 text-blue-400" />,
       run: () => {
-        onToggleTheme();
+        onSelectTheme ? onSelectTheme('dark') : onToggleTheme();
+        onClose();
+      },
+    },
+    {
+      id: 'action-theme-oled',
+      label: `${t('theme', language)}: ${t('themeOled', language)}`,
+      icon: <span className="w-4 h-4 flex items-center justify-center text-xs">🖤</span>,
+      run: () => {
+        onSelectTheme ? onSelectTheme('oled') : onToggleTheme();
+        onClose();
+      },
+    },
+    {
+      id: 'action-theme-catppuccin',
+      label: `${t('theme', language)}: ${t('themeCatppuccin', language)}`,
+      icon: <span className="w-4 h-4 flex items-center justify-center text-xs">🍧</span>,
+      run: () => {
+        onSelectTheme ? onSelectTheme('catppuccin') : onToggleTheme();
+        onClose();
+      },
+    },
+    {
+      id: 'action-theme-nord',
+      label: `${t('theme', language)}: ${t('themeNord', language)}`,
+      icon: <span className="w-4 h-4 flex items-center justify-center text-xs">❄️</span>,
+      run: () => {
+        onSelectTheme ? onSelectTheme('nord') : onToggleTheme();
+        onClose();
+      },
+    },
+    {
+      id: 'action-theme-sepia',
+      label: `${t('theme', language)}: ${t('themeSepia', language)}`,
+      icon: <span className="w-4 h-4 flex items-center justify-center text-xs">📜</span>,
+      run: () => {
+        onSelectTheme ? onSelectTheme('sepia') : onToggleTheme();
+        onClose();
+      },
+    },
+    {
+      id: 'action-theme-light',
+      label: `${t('theme', language)}: ${t('themeLight', language)}`,
+      icon: <Sun className="w-4 h-4 text-amber-500" />,
+      run: () => {
+        onSelectTheme ? onSelectTheme('light') : onToggleTheme();
         onClose();
       },
     },

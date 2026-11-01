@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Table as TableIcon, Kanban, Plus, MoreHorizontal, Check, Trash2, Calendar, 
-  Tag, Search, X, CheckSquare, Type, GripVertical
+  Tag, Search, X, CheckSquare, Type, GripVertical, Sparkles, Filter, ArrowUpDown
 } from 'lucide-react';
 import { Database, DatabaseColumn, DatabaseRow, DatabaseViewType, ColumnType } from '../types';
 import { nanoid } from 'nanoid';
@@ -16,6 +16,8 @@ interface DatabaseViewProps {
 export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language = 'en', onUpdateDatabase }) => {
   const [activeView, setActiveView] = useState<DatabaseViewType>(database.view || 'table');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'none' | 'title-asc' | 'title-desc' | 'date-newest' | 'date-oldest'>('none');
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColName, setNewColName] = useState('');
   const [newColType, setNewColType] = useState<ColumnType>('text');
@@ -112,14 +114,45 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
   ];
   const statusOptions = statusCol?.options || defaultStatusOptions;
 
-  // Filter rows based on search
-  const filteredRows = database.rows.filter((row) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return Object.values(row.cells).some((val) =>
-      typeof val === 'string' ? val.toLowerCase().includes(query) : false
-    );
-  });
+  // Filter & sort rows
+  const filteredAndSortedRows = database.rows
+    .filter((row) => {
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = Object.values(row.cells).some((val) =>
+          typeof val === 'string' ? val.toLowerCase().includes(query) : false
+        );
+        if (!matchesSearch) return false;
+      }
+      if (statusFilter !== 'all') {
+        const rowStatus = row.cells['c-status'] || 'not-started';
+        if (rowStatus !== statusFilter) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'title-asc') {
+        return (a.cells['c-title'] || '').localeCompare(b.cells['c-title'] || '');
+      }
+      if (sortBy === 'title-desc') {
+        return (b.cells['c-title'] || '').localeCompare(a.cells['c-title'] || '');
+      }
+      if (sortBy === 'date-newest') {
+        return (b.cells['c-date'] || '').localeCompare(a.cells['c-date'] || '');
+      }
+      if (sortBy === 'date-oldest') {
+        return (a.cells['c-date'] || '').localeCompare(b.cells['c-date'] || '');
+      }
+      return 0;
+    });
+
+  // Summary statistics
+  const totalRowsCount = database.rows.length;
+  const checkboxCol = database.columns.find((c) => c.type === 'checkbox');
+  const completedCheckboxes = checkboxCol
+    ? database.rows.filter((r) => r.cells[checkboxCol.id] === true).length
+    : 0;
+  const doneStatusCount = database.rows.filter((r) => r.cells['c-status'] === 'done').length;
 
   return (
     <div className="my-6 border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden bg-white dark:bg-[#202020] shadow-sm">
@@ -135,8 +168,41 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Quick Filter */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {/* Status Filter Pills */}
+          <div className="flex items-center gap-1 text-[11px]">
+            <Filter className="w-3 h-3 text-gray-400 shrink-0" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-700 rounded-md px-2 py-0.5 text-[11px] text-[#37352f] dark:text-[#ebebeb] focus:outline-none cursor-pointer"
+            >
+              <option value="all">{t('all', language)}</option>
+              {statusOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-1 text-[11px]">
+            <ArrowUpDown className="w-3 h-3 text-gray-400 shrink-0" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-700 rounded-md px-2 py-0.5 text-[11px] text-[#37352f] dark:text-[#ebebeb] focus:outline-none cursor-pointer"
+            >
+              <option value="none">{t('sort', language)}</option>
+              <option value="title-asc">A → Z</option>
+              <option value="title-desc">Z → A</option>
+              <option value="date-newest">Date (Newest)</option>
+              <option value="date-oldest">Date (Oldest)</option>
+            </select>
+          </div>
+
+          {/* Quick Search */}
           <div className="relative flex items-center">
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 rtl:left-auto rtl:right-2 pointer-events-none" />
             <input
@@ -145,19 +211,19 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchTable', language)}
-              className="pl-7 rtl:pl-2 rtl:pr-7 pr-2 py-1 text-xs bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-md w-32 focus:w-44 transition-all focus:outline-none text-[#37352f] dark:text-[#ebebeb]"
+              className="pl-7 rtl:pl-2 rtl:pr-7 pr-2 py-1 text-xs bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-md w-28 sm:w-36 focus:w-44 transition-all focus:outline-none text-[#37352f] dark:text-[#ebebeb]"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 rtl:right-auto rtl:left-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="absolute right-1.5 rtl:right-auto rtl:left-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
             )}
           </div>
 
-          {/* View Switcher Tabs */}
+          {/* View Switcher Tabs: Table | Board | Gallery */}
           <div className="flex items-center gap-1 bg-[#efefee] dark:bg-[#1a1a1a] p-1 rounded-lg">
             <button
               onClick={() => handleViewChange('table')}
@@ -168,7 +234,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
               }`}
             >
               <TableIcon className="w-3.5 h-3.5" />
-              {t('tableView', language)}
+              <span className="hidden sm:inline">{t('tableView', language)}</span>
             </button>
             <button
               onClick={() => handleViewChange('board')}
@@ -179,7 +245,18 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
               }`}
             >
               <Kanban className="w-3.5 h-3.5" />
-              {t('boardView', language)}
+              <span className="hidden sm:inline">{t('boardView', language)}</span>
+            </button>
+            <button
+              onClick={() => handleViewChange('gallery')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                activeView === 'gallery'
+                  ? 'bg-white dark:bg-[#2e2e2e] text-[#37352f] dark:text-[#ebebeb] shadow-xs'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t('galleryView', language)}</span>
             </button>
           </div>
         </div>
@@ -230,7 +307,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((row, idx) => (
+              {filteredAndSortedRows.map((row, idx) => (
                 <tr
                   key={row.id}
                   className="border-b border-[#e9e9e7] dark:border-[#2e2e2e] hover:bg-[#fafafa] dark:hover:bg-[#252525] group transition-colors"
@@ -309,6 +386,32 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-[#e9e9e7] dark:border-[#2e2e2e] bg-[#fbfbfa]/70 dark:bg-[#1f1f1f] text-gray-500 dark:text-gray-400 font-mono text-[11px]">
+                <td className="w-10 px-3 py-1.5 text-center font-bold text-gray-400">∑</td>
+                {database.columns.map((col) => (
+                  <td key={col.id} className="px-3 py-1.5 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
+                    {col.id === 'c-title' && (
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">
+                        {totalRowsCount} {t('itemsCount', language)}
+                      </span>
+                    )}
+                    {col.type === 'checkbox' && (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        {completedCheckboxes}/{totalRowsCount} ({Math.round((completedCheckboxes / (totalRowsCount || 1)) * 100)}%)
+                      </span>
+                    )}
+                    {col.type === 'status' && (
+                      <span className="text-blue-600 dark:text-blue-400 font-medium">
+                        {doneStatusCount} {t('done', language)}
+                      </span>
+                    )}
+                  </td>
+                ))}
+                <td className="w-24 px-2 py-1.5 border-r border-[#e9e9e7] dark:border-[#2e2e2e]"></td>
+                <td className="w-10 px-2 py-1.5"></td>
+              </tr>
+            </tfoot>
           </table>
 
           {/* Add Row Button */}
@@ -320,11 +423,104 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
             <span>{t('newRow', language)}</span>
           </button>
         </div>
+      ) : activeView === 'gallery' ? (
+        /* Gallery View */
+        <div className="p-4 bg-[#fbfbfa] dark:bg-[#1a1a1a]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+            {filteredAndSortedRows.map((row, idx) => {
+              const gradients = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #2b5876 0%, #4e4376 100%)',
+                'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)',
+                'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              ];
+              const cardGrad = gradients[idx % gradients.length];
+              const currentStatus = statusOptions.find(
+                (s) => s.id === (row.cells['c-status'] || 'not-started')
+              );
+
+              return (
+                <div
+                  key={row.id}
+                  className="rounded-xl border border-[#e9e9e7] dark:border-[#2e2e2e] bg-white dark:bg-[#242424] shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500 transition-all overflow-hidden flex flex-col justify-between group/card"
+                >
+                  {/* Card Cover Strip */}
+                  <div style={{ background: cardGrad }} className="h-14 w-full relative">
+                    <button
+                      onClick={() => handleDeleteRow(row.id)}
+                      className="absolute top-2 right-2 rtl:right-auto rtl:left-2 opacity-0 group-hover/card:opacity-100 p-1 rounded-md bg-black/60 text-white hover:bg-black/80 transition-opacity cursor-pointer"
+                      title="Delete card"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                    <div className="flex items-start gap-1.5">
+                      <input
+                        type="text"
+                        dir="auto"
+                        value={row.cells['c-title'] || ''}
+                        onChange={(e) => handleCellChange(row.id, 'c-title', e.target.value)}
+                        placeholder={t('untitledCard', language)}
+                        className="w-full font-bold text-xs bg-transparent border-none outline-none text-[#37352f] dark:text-[#ebebeb]"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                      {/* Status Tag */}
+                      <span
+                        className="px-2 py-0.5 rounded-full font-medium text-[10px]"
+                        style={{
+                          backgroundColor: `${currentStatus?.color || '#cbd5e1'}40`,
+                          color: currentStatus?.color || '#cbd5e1',
+                        }}
+                      >
+                        {currentStatus?.label || t('notStarted', language)}
+                      </span>
+
+                      {/* Date */}
+                      {row.cells['c-date'] && (
+                        <span className="text-gray-400 flex items-center gap-1 text-[10px]">
+                          <Calendar className="w-3 h-3 text-orange-400" />
+                          <span>{row.cells['c-date']}</span>
+                        </span>
+                      )}
+
+                      {/* Checkbox */}
+                      {checkboxCol && (
+                        <button
+                          onClick={() => handleCellChange(row.id, checkboxCol.id, !row.cells[checkboxCol.id])}
+                          className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
+                            row.cells[checkboxCol.id] ? 'text-emerald-500 bg-emerald-500/10' : 'text-gray-400 hover:text-gray-600'
+                          }`}
+                        >
+                          <Check className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Quick Add Card */}
+            <button
+              onClick={() => handleAddRow()}
+              className="rounded-xl border border-dashed border-gray-300 dark:border-[#383838] hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 p-6 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-indigo-500 transition-colors cursor-pointer min-h-[120px]"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="text-xs font-medium">{t('newRow', language)}</span>
+            </button>
+          </div>
+        </div>
       ) : (
         /* Board / Kanban View with Drag & Drop */
         <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto min-h-[320px] bg-[#fbfbfa] dark:bg-[#1c1c1c]">
           {statusOptions.map((status) => {
-            const columnRows = filteredRows.filter(
+            const columnRows = filteredAndSortedRows.filter(
               (r) => (r.cells['c-status'] || 'not-started') === status.id
             );
             const isDragOver = dragOverColumnId === status.id;

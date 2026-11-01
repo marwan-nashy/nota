@@ -11,6 +11,7 @@ export type BlockType =
   | 'divider'
   | 'callout'
   | 'code'
+  | 'math'
   | 'image'
   | 'database'
   | 'page_link';
@@ -30,7 +31,9 @@ export interface Block {
   targetPageId?: string;
 }
 
-export type DatabaseViewType = 'table' | 'board' | 'list';
+export type DatabaseViewType = 'table' | 'board' | 'gallery' | 'list';
+
+export type AppTheme = 'light' | 'dark' | 'oled' | 'catppuccin' | 'nord' | 'sepia';
 
 export type ColumnType = 'title' | 'text' | 'select' | 'status' | 'checkbox' | 'date';
 
@@ -85,6 +88,6 @@ export interface WorkspaceState {
   workspaces: Record<string, Workspace>;
   activeWorkspaceId: string;
   sidebarOpen: boolean;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   language?: 'en' | 'ar';
 }
