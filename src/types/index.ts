@@ -41,13 +41,15 @@ export type DatabaseViewType = 'table' | 'board' | 'gallery' | 'list';
 
 export type AppTheme = 'light' | 'dark' | 'oled' | 'catppuccin' | 'nord' | 'sepia';
 
-export type ColumnType = 'title' | 'text' | 'select' | 'status' | 'checkbox' | 'date';
+export type ColumnType = 'title' | 'text' | 'number' | 'select' | 'status' | 'checkbox' | 'date' | 'formula';
 
 export interface DatabaseColumn {
   id: string;
   name: string;
   type: ColumnType;
   options?: { id: string; label: string; color: string }[];
+  formula?: string;
+  rollup?: 'none' | 'sum' | 'avg' | 'count' | 'min' | 'max';
 }
 
 export interface DatabaseRow {

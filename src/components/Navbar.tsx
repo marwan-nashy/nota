@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Menu, Star, MoreHorizontal, Download, Trash2, Maximize2, Minimize2, 
   Type, Check, FileText, Printer, Code, Share2, Lock, Unlock, ListTree,
-  Search, History
+  Search, History, Mail
 } from 'lucide-react';
 import { Page, FeatureFlags } from '../types';
 import { exportPageMarkdown } from '../services/storage';
+import { downloadPageAsEML } from '../services/emlService';
 import { t, Language } from '../i18n';
 
 interface NavbarProps {
@@ -307,6 +308,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <Code className="w-3.5 h-3.5 text-gray-400" />
                   <span>{t('exportHtml', language)}</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    await downloadPageAsEML(page);
+                    setShowMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#efefee] dark:hover:bg-[#323232] text-gray-700 dark:text-gray-200 cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5 text-purple-500" />
+                  <span>{language === 'ar' ? 'تصدير كبسولة بريد (.eml)' : 'Export Capsule (.eml)'}</span>
                 </button>
                 <button
                   onClick={handlePrint}

@@ -3,7 +3,8 @@ import {
   Search, Plus, Star, FileText, ChevronRight, ChevronDown, 
   Trash2, Moon, Sun, Download, Upload, Cpu, MoreHorizontal, Copy,
   Check, Edit3, Smile, X, Layers, Briefcase, Layout, Languages,
-  Calendar, CalendarDays, ChevronLeft, Network, Settings, Hash, ArrowRightLeft
+  Calendar, CalendarDays, ChevronLeft, Network, Settings, Hash, ArrowRightLeft,
+  CheckSquare, Bot
 } from 'lucide-react';
 import { Page, Workspace, AppTheme, FeatureFlags } from '../types';
 import { t, Language } from '../i18n';
@@ -33,6 +34,8 @@ interface SidebarProps {
   onOpenTags?: () => void;
   onOpenImport?: () => void;
   onOpenSync?: () => void;
+  onOpenTimeline?: () => void;
+  onOpenMcp?: () => void;
   onOpenSettings?: (tab?: 'features' | 'updates') => void;
   onExportWorkspace: () => void;
   onImportWorkspace: (json: string) => void;
@@ -71,6 +74,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenTags,
   onOpenImport,
   onOpenSync,
+  onOpenTimeline,
+  onOpenMcp,
   onOpenSettings,
   onExportWorkspace,
   onImportWorkspace,
@@ -509,6 +514,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span>{t('tags', language)}</span>
             </button>
           )}
+
+          {/* Global Tasks & Timeline */}
+          <button
+            onClick={onOpenTimeline}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          >
+            <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
+            <span>{language === 'ar' ? 'أجندة المهام والمخطط' : 'Global Tasks'}</span>
+          </button>
+
+          {/* Local MCP Server Bridge */}
+          <button
+            onClick={onOpenMcp}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          >
+            <Bot className="w-3.5 h-3.5 text-violet-500" />
+            <span>{language === 'ar' ? 'جسر الذكاء (MCP)' : 'AI Bridge (MCP)'}</span>
+          </button>
 
           {/* Markdown & Obsidian Importer */}
           <button

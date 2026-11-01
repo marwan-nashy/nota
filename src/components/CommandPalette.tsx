@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette, 
-  Settings, RefreshCw, Hash, Maximize2, History, ArrowRightLeft, Upload 
+  Settings, RefreshCw, Hash, Maximize2, History, ArrowRightLeft, Upload,
+  CheckSquare, Bot, Sparkles
 } from 'lucide-react';
 import { Page, AppTheme } from '../types';
+import { bm25 } from '../services/bm25Search';
 import { t, Language } from '../i18n';
 
 interface CommandPaletteProps {
@@ -24,6 +26,8 @@ interface CommandPaletteProps {
   onToggleZenMode?: () => void;
   onOpenImport?: () => void;
   onOpenSync?: () => void;
+  onOpenTimeline?: () => void;
+  onOpenMcp?: () => void;
   onExportWorkspace: () => void;
 }
 
@@ -45,6 +49,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onToggleZenMode,
   onOpenImport,
   onOpenSync,
+  onOpenTimeline,
+  onOpenMcp,
   onExportWorkspace,
 }) => {
   const [query, setQuery] = useState('');
@@ -61,16 +67,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   if (!isOpen) return null;
 
-  // Filter pages and content
-  const filteredPages = Object.values(pages)
-    .filter((p) => !p.isArchived)
-    .filter((p) => {
-      const matchTitle = p.title.toLowerCase().includes(query.toLowerCase());
-      const matchBlocks = p.blocks.some((b) =>
-        b.content.toLowerCase().includes(query.toLowerCase())
-      );
-      return matchTitle || matchBlocks;
-    });
+  // BM25 Ranked Search or Recent Pages
+  const searchResults = query.trim()
+    ? bm25.search(pages, query.trim(), 12)
+    : Object.values(pages)
+        .filter((p) => !p.isArchived)
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 8)
+        .map((p) => ({
+          page: p,
+          score: 0,
+          matchedTerms: [],
+          snippet: p.blocks[0]?.content?.replace(/<[^>]*>/g, '').slice(0, 70) || '',
+        }));
 
   const actions = [
     {
@@ -218,6 +227,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
+      id: 'action-timeline',
+      label: language === 'ar' ? 'أجندة المهام والمخطط الزمني (Timeline)' : 'Global Tasks & Timeline',
+      icon: <CheckSquare className="w-4 h-4 text-indigo-400" />,
+      run: () => {
+        onOpenTimeline?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-mcp',
+      label: language === 'ar' ? 'جسر الذكاء الاصطناعي (MCP AI Bridge)' : 'Model Context Protocol (MCP) AI Bridge',
+      icon: <Bot className="w-4 h-4 text-violet-400" />,
+      run: () => {
+        onOpenMcp?.();
+        onClose();
+      },
+    },
+    {
       id: 'action-sync',
       label: t('p2pSync', language),
       icon: <ArrowRightLeft className="w-4 h-4 text-emerald-400" />,
@@ -229,14 +256,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   ];
 
   const allItems = [
-    ...filteredPages.map((p) => ({
+    ...searchResults.map(({ page, score, snippet }) => ({
       type: 'page',
-      id: p.id,
-      label: p.title || t('untitled', language),
-      icon: p.icon || '📄',
-      subtext: p.blocks[0]?.content ? p.blocks[0].content.slice(0, 60).replace(/<[^>]*>/g, '') : '',
+      id: page.id,
+      label: page.title || t('untitled', language),
+      icon: page.icon || '📄',
+      subtext: snippet || (page.blocks[0]?.content ? page.blocks[0].content.slice(0, 60).replace(/<[^>]*>/g, '') : ''),
+      badge: score > 0 ? `BM25 ${Math.round(score * 10) / 10}` : undefined,
       run: () => {
-        onSelectPage(p.id);
+        onSelectPage(page.id);
         onClose();
       },
     })),
@@ -246,6 +274,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       label: a.label,
       icon: a.icon,
       subtext: t('quickActions', language),
+      badge: undefined,
       run: a.run,
     })),
   ];
@@ -313,7 +342,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div dir="auto" className="text-xs font-medium truncate">{item.label}</div>
+                    <div dir="auto" className="text-xs font-medium truncate flex items-center gap-1.5">
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
                     {item.subtext && (
                       <div dir="auto" className="text-[11px] text-gray-400 truncate">{item.subtext}</div>
                     )}
@@ -339,7 +375,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <kbd className="bg-gray-200 dark:bg-[#323232] px-1 py-0.5 rounded font-mono">Enter</kbd>
             <span>{t('select', language)}</span>
           </div>
-          <span className="text-[10px] text-emerald-500 font-mono">Nota v1.0.1</span>
+          <span className="text-[10px] text-emerald-500 font-mono">Nota v1.1.0</span>
         </div>
       </div>
     </div>

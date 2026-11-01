@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { 
   Table as TableIcon, Kanban, Plus, MoreHorizontal, Check, Trash2, Calendar, 
-  Tag, Search, X, CheckSquare, Type, GripVertical, Sparkles, Filter, ArrowUpDown
+  Tag, Search, X, CheckSquare, Type, GripVertical, Sparkles, Filter, ArrowUpDown,
+  Calculator, Hash, Settings2
 } from 'lucide-react';
 import { Database, DatabaseColumn, DatabaseRow, DatabaseViewType, ColumnType } from '../types';
+import { evaluateFormula, calculateRollup } from '../services/formulaEvaluator';
 import { nanoid } from 'nanoid';
 import { t, Language } from '../i18n';
 
@@ -21,6 +23,9 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColName, setNewColName] = useState('');
   const [newColType, setNewColType] = useState<ColumnType>('text');
+  const [newColFormula, setNewColFormula] = useState('');
+  const [editingFormulaColId, setEditingFormulaColId] = useState<string | null>(null);
+  const [editingFormulaText, setEditingFormulaText] = useState('');
 
   // Drag & drop state for Kanban cards
   const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
@@ -78,6 +83,8 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
       id: newColId,
       name: newColName.trim(),
       type: newColType,
+      formula: newColType === 'formula' ? (newColFormula.trim() || 'prop("Price") * 1') : undefined,
+      rollup: newColType === 'number' || newColType === 'formula' ? 'sum' : 'none',
       options:
         newColType === 'status'
           ? [
@@ -94,7 +101,21 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
     });
 
     setNewColName('');
+    setNewColFormula('');
     setShowAddColumn(false);
+  };
+
+  const handleUpdateRollup = (colId: string, rollup: DatabaseColumn['rollup']) => {
+    const updated = database.columns.map((c) => (c.id === colId ? { ...c, rollup } : c));
+    onUpdateDatabase({ ...database, columns: updated });
+  };
+
+  const handleSaveFormula = (colId: string) => {
+    const updated = database.columns.map((c) =>
+      c.id === colId ? { ...c, formula: editingFormulaText } : c
+    );
+    onUpdateDatabase({ ...database, columns: updated });
+    setEditingFormulaColId(null);
   };
 
   const handleDeleteColumn = (colId: string) => {
@@ -276,9 +297,23 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
                         {col.type === 'status' && <Tag className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
                         {col.type === 'checkbox' && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
                         {col.type === 'date' && <Calendar className="w-3.5 h-3.5 text-orange-500 shrink-0" />}
+                        {col.type === 'number' && <Hash className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                        {col.type === 'formula' && <Calculator className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
                         {col.type === 'title' && <Type className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
                         {col.type === 'text' && <Type className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
                         <span>{col.name}</span>
+                        {col.type === 'formula' && (
+                          <button
+                            onClick={() => {
+                              setEditingFormulaColId(col.id);
+                              setEditingFormulaText(col.formula || '');
+                            }}
+                            className="p-0.5 text-purple-400 hover:text-purple-600 rounded cursor-pointer"
+                            title="Edit formula"
+                          >
+                            <Settings2 className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
                       {col.id !== 'c-title' && (
                         <button
@@ -347,6 +382,46 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
                       );
                     }
 
+                    if (col.type === 'number') {
+                      return (
+                        <td key={col.id} className="px-3 py-2 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
+                          <input
+                            type="number"
+                            value={val !== undefined ? val : ''}
+                            onChange={(e) =>
+                              handleCellChange(
+                                row.id,
+                                col.id,
+                                e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                              )
+                            }
+                            className="w-full bg-transparent border-none focus:outline-none text-xs font-mono text-[#37352f] dark:text-[#ebebeb]"
+                            placeholder="0"
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === 'formula') {
+                      const calculated = evaluateFormula(col.formula || '', row, database.columns);
+                      return (
+                        <td
+                          key={col.id}
+                          className="px-3 py-2 border-r border-[#e9e9e7] dark:border-[#2e2e2e] bg-purple-50/20 dark:bg-purple-950/20 cursor-pointer"
+                          title={`Formula: ${col.formula || 'empty'}`}
+                          onClick={() => {
+                            setEditingFormulaColId(col.id);
+                            setEditingFormulaText(col.formula || '');
+                          }}
+                        >
+                          <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-purple-700 dark:text-purple-300">
+                            <span className="text-[9px] text-purple-400 font-normal">fx</span>
+                            <span>{calculated}</span>
+                          </div>
+                        </td>
+                      );
+                    }
+
                     if (col.type === 'date') {
                       return (
                         <td key={col.id} className="px-3 py-2 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
@@ -389,25 +464,57 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
             <tfoot>
               <tr className="border-t-2 border-[#e9e9e7] dark:border-[#2e2e2e] bg-[#fbfbfa]/70 dark:bg-[#1f1f1f] text-gray-500 dark:text-gray-400 font-mono text-[11px]">
                 <td className="w-10 px-3 py-1.5 text-center font-bold text-gray-400">∑</td>
-                {database.columns.map((col) => (
-                  <td key={col.id} className="px-3 py-1.5 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
-                    {col.id === 'c-title' && (
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">
-                        {totalRowsCount} {t('itemsCount', language)}
-                      </span>
-                    )}
-                    {col.type === 'checkbox' && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {completedCheckboxes}/{totalRowsCount} ({Math.round((completedCheckboxes / (totalRowsCount || 1)) * 100)}%)
-                      </span>
-                    )}
-                    {col.type === 'status' && (
-                      <span className="text-blue-600 dark:text-blue-400 font-medium">
-                        {doneStatusCount} {t('done', language)}
-                      </span>
-                    )}
-                  </td>
-                ))}
+                {database.columns.map((col) => {
+                  const rollup = calculateRollup(col, filteredAndSortedRows);
+                  return (
+                    <td key={col.id} className="px-3 py-1.5 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
+                      {col.id === 'c-title' ? (
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                          {totalRowsCount} {t('itemsCount', language)}
+                        </span>
+                      ) : col.type === 'checkbox' ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          {completedCheckboxes}/{totalRowsCount} ({Math.round((completedCheckboxes / (totalRowsCount || 1)) * 100)}%)
+                        </span>
+                      ) : col.type === 'status' ? (
+                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                          {doneStatusCount} {t('done', language)}
+                        </span>
+                      ) : rollup.value !== '' ? (
+                        <div className="flex items-center justify-between group/calc">
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            {rollup.label}: {rollup.value}
+                          </span>
+                          <select
+                            value={col.rollup || 'none'}
+                            onChange={(e) => handleUpdateRollup(col.id, e.target.value as any)}
+                            className="opacity-0 group-hover/calc:opacity-100 text-[9px] bg-transparent border-none text-gray-400 focus:outline-none cursor-pointer"
+                          >
+                            <option value="none">None</option>
+                            <option value="sum">Sum</option>
+                            <option value="avg">Avg</option>
+                            <option value="count">Count</option>
+                            <option value="min">Min</option>
+                            <option value="max">Max</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <select
+                          value={col.rollup || 'none'}
+                          onChange={(e) => handleUpdateRollup(col.id, e.target.value as any)}
+                          className="text-[9px] bg-transparent border-none text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none cursor-pointer"
+                        >
+                          <option value="none">Calc...</option>
+                          <option value="sum">Sum</option>
+                          <option value="avg">Avg</option>
+                          <option value="count">Count</option>
+                          <option value="min">Min</option>
+                          <option value="max">Max</option>
+                        </select>
+                      )}
+                    </td>
+                  );
+                })}
                 <td className="w-24 px-2 py-1.5 border-r border-[#e9e9e7] dark:border-[#2e2e2e]"></td>
                 <td className="w-10 px-2 py-1.5"></td>
               </tr>
@@ -697,28 +804,96 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language =
                   className="w-full bg-white dark:bg-[#1c1c1c] border border-gray-300 dark:border-[#444] rounded-lg px-2.5 py-1.5 text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
                 >
                   <option value="text">Text</option>
+                  <option value="number">Number</option>
+                  <option value="formula">Formula (fx)</option>
                   <option value="status">Status (Tags)</option>
                   <option value="date">Date</option>
                   <option value="checkbox">Checkbox</option>
                 </select>
               </div>
 
+              {newColType === 'formula' && (
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1 block">Formula Expression</label>
+                  <input
+                    type="text"
+                    value={newColFormula}
+                    onChange={(e) => setNewColFormula(e.target.value)}
+                    placeholder='e.g. Price * Quantity or prop("Price") * 1.15'
+                    className="w-full bg-white dark:bg-[#1c1c1c] border border-gray-300 dark:border-[#444] rounded-lg px-2.5 py-1.5 text-xs font-mono text-purple-600 dark:text-purple-300 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Supports +, -, *, /, round, if, min, max, concat</p>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700"
+                  className="flex-1 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 cursor-pointer"
                 >
                   Add Column
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddColumn(false)}
-                  className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg"
+                  className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg cursor-pointer"
                 >
                   Cancel
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Formula Modal */}
+      {editingFormulaColId && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-96 bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#383838] rounded-xl shadow-2xl p-4 animate-in fade-in zoom-in-95 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-[#333333]">
+              <h4 className="font-semibold text-xs text-[#37352f] dark:text-[#ebebeb] flex items-center gap-1.5">
+                <Calculator className="w-4 h-4 text-purple-500" />
+                <span>Edit Formula Column</span>
+              </h4>
+              <button
+                onClick={() => setEditingFormulaColId(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[11px] text-gray-500 mb-1 block">Expression:</label>
+              <input
+                type="text"
+                autoFocus
+                value={editingFormulaText}
+                onChange={(e) => setEditingFormulaText(e.target.value)}
+                placeholder='e.g. Price * Quantity or prop("Amount") * 1.15'
+                className="w-full bg-white dark:bg-[#1c1c1c] border border-gray-300 dark:border-[#444] rounded-lg px-2.5 py-1.5 text-xs font-mono text-purple-600 dark:text-purple-300 focus:outline-none"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">
+                Reference columns by name (e.g. <code>Price * 2</code>) or <code>prop("Column")</code>.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingFormulaColId(null)}
+                className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSaveFormula(editingFormulaColId)}
+                className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium cursor-pointer"
+              >
+                Save Formula
+              </button>
+            </div>
           </div>
         </div>
       )}

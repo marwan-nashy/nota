@@ -22,6 +22,9 @@ import { TagExplorerModal } from './components/TagExplorerModal';
 import { HistoryModal } from './components/HistoryModal';
 import { ImportModal } from './components/ImportModal';
 import { P2PSyncModal } from './components/P2PSyncModal';
+import { TaskTimelineModal } from './components/TaskTimelineModal';
+import { McpBridgeModal } from './components/McpBridgeModal';
+import { RelatedNotes } from './components/RelatedNotes';
 import { Plus, Link as LinkIcon, Lock, KeyRound, Minimize2 } from 'lucide-react';
 import { t, Language } from './i18n';
 
@@ -52,6 +55,8 @@ export function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [isMcpOpen, setIsMcpOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const [openTabs, setOpenTabs] = useState<string[]>(() => {
     const ws = loadWorkspace();
@@ -496,6 +501,23 @@ export function App() {
       ...activePage,
       blocks: newBlocks,
       updatedAt: Date.now(),
+    });
+  };
+
+  const handleToggleWorkspaceTask = (pageId: string, blockId: string, completed: boolean) => {
+    updateCurrentWorkspace((ws) => {
+      const targetPage = ws.pages[pageId];
+      if (!targetPage) return ws;
+      const updatedBlocks = targetPage.blocks.map((b) =>
+        b.id === blockId ? { ...b, checked: completed } : b
+      );
+      return {
+        ...ws,
+        pages: {
+          ...ws.pages,
+          [pageId]: { ...targetPage, blocks: updatedBlocks, updatedAt: Date.now() },
+        },
+      };
     });
   };
 
@@ -956,6 +978,8 @@ export function App() {
         onOpenTags={() => setIsTagsOpen(true)}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenSync={() => setIsSyncOpen(true)}
+        onOpenTimeline={() => setIsTimelineOpen(true)}
+        onOpenMcp={() => setIsMcpOpen(true)}
         onOpenSettings={(tab) => {
           setSettingsTab(tab || 'features');
           setIsSettingsOpen(true);
@@ -1130,6 +1154,16 @@ export function App() {
                     </div>
                   )}
 
+                  {/* Semantic Related Notes by Meaning */}
+                  {currentWorkspace?.pages && (
+                    <RelatedNotes
+                      currentPageId={activePage.id}
+                      pages={currentWorkspace.pages}
+                      language={language}
+                      onSelectPage={handleSelectPage}
+                    />
+                  )}
+
                   {/* Click to add new block at bottom */}
                   <div
                     onClick={() => {
@@ -1204,6 +1238,8 @@ export function App() {
         onToggleZenMode={() => setZenMode((prev) => !prev)}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenSync={() => setIsSyncOpen(true)}
+        onOpenTimeline={() => setIsTimelineOpen(true)}
+        onOpenMcp={() => setIsMcpOpen(true)}
         onExportWorkspace={handleExportWorkspace}
       />
 
@@ -1298,6 +1334,28 @@ export function App() {
         onClose={() => setIsSyncOpen(false)}
         onImportSyncCode={handleImportWorkspace}
       />
+
+      {/* Global Tasks & Milestone Timeline Modal */}
+      {currentWorkspace && (
+        <TaskTimelineModal
+          isOpen={isTimelineOpen}
+          workspace={currentWorkspace}
+          language={language}
+          onClose={() => setIsTimelineOpen(false)}
+          onSelectPage={handleSelectPage}
+          onToggleTask={handleToggleWorkspaceTask}
+        />
+      )}
+
+      {/* Model Context Protocol (MCP) AI Bridge Modal */}
+      {currentWorkspace && (
+        <McpBridgeModal
+          isOpen={isMcpOpen}
+          workspace={currentWorkspace}
+          language={language}
+          onClose={() => setIsMcpOpen(false)}
+        />
+      )}
 
       {/* Settings & Customization Modal */}
       <SettingsModal

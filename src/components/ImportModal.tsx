@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileText, Check, AlertCircle, FileArchive } from 'lucide-react';
+import { Upload, X, FileText, Check, AlertCircle, FileArchive, Mail } from 'lucide-react';
 import { Page, Block } from '../types';
 import { parseMarkdownToBlocks } from '../services/storage';
+import { parseEMLToPage } from '../services/emlService';
 import { nanoid } from 'nanoid';
 import { t, Language } from '../i18n';
 
@@ -18,7 +19,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   onClose,
   onImportPages,
 }) => {
-  const [filesLoaded, setFilesLoaded] = useState<{ name: string; content: string }[]>([]);
+  const [filesLoaded, setFilesLoaded] = useState<{ name: string; content: string; isEml: boolean }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,15 +27,19 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const readList: { name: string; content: string }[] = [];
+    const readList: { name: string; content: string; isEml: boolean }[] = [];
     let count = 0;
 
     Array.from(files).forEach((file) => {
-      if (file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+      const isEml = file.name.endsWith('.eml');
+      const isMd = file.name.endsWith('.md') || file.name.endsWith('.txt');
+
+      if (isMd || isEml) {
         const reader = new FileReader();
         reader.onload = (e) => {
           const content = e.target?.result as string;
-          readList.push({ name: file.name.replace(/\.(md|txt)$/, ''), content });
+          const cleanName = file.name.replace(/\.(md|txt|eml)$/i, '');
+          readList.push({ name: cleanName, content, isEml });
           count++;
           if (count === files.length) {
             setFilesLoaded((prev) => [...prev, ...readList]);
@@ -47,28 +52,35 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     });
   };
 
-  const handleApplyImport = () => {
+  const handleApplyImport = async () => {
     if (filesLoaded.length === 0) return;
 
-    const newPages: Page[] = filesLoaded.map(({ name, content }) => {
-      const parsed = parseMarkdownToBlocks(content, name);
-      const newPageId = 'page-' + nanoid(8);
-      return {
-        id: newPageId,
-        parentId: null,
-        title: parsed.title,
-        icon: '📄',
-        cover: null,
-        isFavorite: false,
-        isArchived: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        font: 'sans',
-        fullWidth: false,
-        smallText: false,
-        blocks: parsed.blocks,
-      };
-    });
+    const newPages: Page[] = [];
+
+    for (const file of filesLoaded) {
+      if (file.isEml) {
+        const emlPage = await parseEMLToPage(file.content, file.name);
+        newPages.push(emlPage);
+      } else {
+        const parsed = parseMarkdownToBlocks(file.content, file.name);
+        const newPageId = 'page-' + nanoid(8);
+        newPages.push({
+          id: newPageId,
+          parentId: null,
+          title: parsed.title,
+          icon: '📄',
+          cover: null,
+          isFavorite: false,
+          isArchived: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          font: 'sans',
+          fullWidth: false,
+          smallText: false,
+          blocks: parsed.blocks,
+        });
+      }
+    }
 
     onImportPages(newPages);
     setFilesLoaded([]);
@@ -89,10 +101,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900 dark:text-white">
-                {t('importMarkdown', language)}
+                {t('importMarkdown', language)} & Capsule (.eml)
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Import Obsidian, Notion markdown exports, or standard .md files
+                Import Obsidian, Markdown, Notion, or CapsuleCraft RFC 5322 (.eml) notes
               </p>
             </div>
           </div>
@@ -128,16 +140,19 @@ export const ImportModal: React.FC<ImportModalProps> = ({
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".md,.txt"
+              accept=".md,.txt,.eml"
               className="hidden"
               onChange={(e) => handleFiles(e.target.files)}
             />
-            <FileText className="w-8 h-8 text-indigo-500 mb-2" />
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-7 h-7 text-indigo-500" />
+              <Mail className="w-7 h-7 text-purple-500" />
+            </div>
             <p className="font-semibold text-xs text-gray-900 dark:text-white mb-1">
-              Click to browse or drop markdown files here
+              Click to browse or drop .md, .txt, or .eml capsules here
             </p>
             <p className="text-[11px] text-gray-400">
-              Supports .md, .txt from Obsidian, Notion, GitHub, and Logseq
+              Supports Markdown, Obsidian, Notion, and CapsuleCraft / RFC 5322 email capsules with offline media
             </p>
           </div>
 
@@ -152,9 +167,16 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                   key={i}
                   className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-[#262626] border border-gray-200/60 dark:border-[#333] text-xs"
                 >
-                  <span className="truncate text-gray-700 dark:text-gray-300 font-medium">
-                    {f.name}.md
-                  </span>
+                  <div className="flex items-center gap-2 truncate">
+                    {f.isEml ? (
+                      <Mail className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    )}
+                    <span className="truncate text-gray-700 dark:text-gray-300 font-medium">
+                      {f.name}.{f.isEml ? 'eml' : 'md'}
+                    </span>
+                  </div>
                   <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 </div>
               ))}

@@ -330,6 +330,13 @@ export const translations = {
     featSnapshotsDesc: 'Local rollback checkpoints and version comparison.',
     featVoiceNotes: 'Web Audio Voice Notes',
     featVoiceNotesDesc: 'Record audio memos with local playback (/voice).',
+    globalTasks: 'Global Tasks & Timeline',
+    aiBridge: 'AI Bridge (MCP Server)',
+    exportEml: 'Export Capsule (.eml)',
+    importEml: 'Import Capsule (.eml)',
+    relatedNotes: 'Related by meaning',
+    formula: 'Formula',
+    calcRollup: 'Calculate',
   },
 
   ar: {
@@ -661,6 +668,13 @@ export const translations = {
     featSnapshotsDesc: 'نقاط استرجاع محلية ومقارنة الفروقات بين النسخ.',
     featVoiceNotes: 'الملاحظات الصوتية المباشرة',
     featVoiceNotesDesc: 'تسجيل ملاحظات صوتية وتشغيلها محلياً (/voice).',
+    globalTasks: 'أجندة المهام والمخطط الزمني',
+    aiBridge: 'جسر الذكاء الاصطناعي (MCP)',
+    exportEml: 'تصدير كبسولة بريد (.eml)',
+    importEml: 'استيراد كبسولة بريد (.eml)',
+    relatedNotes: 'ملاحظات مرتبطة بالمعنى',
+    formula: 'معادلة حسابية',
+    calcRollup: 'حساب الإحصائيات',
   }
 };
 
