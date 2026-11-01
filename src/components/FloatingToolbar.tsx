@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Code, Palette, Link as LinkIcon } from 'lucide-react';
+import { t, Language } from '../i18n';
+
+interface FloatingToolbarProps {
+  language?: Language;
+}
 
 const PALETTE_COLORS = [
   { name: 'Default', text: 'inherit', bg: 'transparent' },
@@ -14,7 +19,7 @@ const PALETTE_COLORS = [
   { name: 'Red', text: '#d44c47', bg: '#fdebec' },
 ];
 
-export const FloatingToolbar: React.FC = () => {
+export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({ language = 'en' }) => {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [showColors, setShowColors] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -76,32 +81,32 @@ export const FloatingToolbar: React.FC = () => {
     >
       <button
         onMouseDown={(e) => { e.preventDefault(); exec('bold'); }}
-        className="p-1.5 rounded hover:bg-[#383838] transition-colors"
-        title="Bold (Ctrl+B)"
+        className="p-1.5 rounded hover:bg-[#383838] transition-colors cursor-pointer"
+        title={`${t('bold', language)} (Ctrl+B)`}
       >
         <Bold className="w-3.5 h-3.5" />
       </button>
 
       <button
         onMouseDown={(e) => { e.preventDefault(); exec('italic'); }}
-        className="p-1.5 rounded hover:bg-[#383838] transition-colors"
-        title="Italic (Ctrl+I)"
+        className="p-1.5 rounded hover:bg-[#383838] transition-colors cursor-pointer"
+        title={`${t('italic', language)} (Ctrl+I)`}
       >
         <Italic className="w-3.5 h-3.5" />
       </button>
 
       <button
         onMouseDown={(e) => { e.preventDefault(); exec('underline'); }}
-        className="p-1.5 rounded hover:bg-[#383838] transition-colors"
-        title="Underline (Ctrl+U)"
+        className="p-1.5 rounded hover:bg-[#383838] transition-colors cursor-pointer"
+        title={`${t('underline', language)} (Ctrl+U)`}
       >
         <Underline className="w-3.5 h-3.5" />
       </button>
 
       <button
         onMouseDown={(e) => { e.preventDefault(); exec('strikeThrough'); }}
-        className="p-1.5 rounded hover:bg-[#383838] transition-colors"
-        title="Strikethrough"
+        className="p-1.5 rounded hover:bg-[#383838] transition-colors cursor-pointer"
+        title={t('strikethrough', language)}
       >
         <Strikethrough className="w-3.5 h-3.5" />
       </button>
@@ -114,8 +119,8 @@ export const FloatingToolbar: React.FC = () => {
             exec('formatBlock', '<code>');
           }
         }}
-        className="p-1.5 rounded hover:bg-[#383838] transition-colors"
-        title="Inline Code"
+        className="p-1.5 rounded hover:bg-[#383838] transition-colors cursor-pointer"
+        title={t('blockCode', language)}
       >
         <Code className="w-3.5 h-3.5" />
       </button>
@@ -126,21 +131,23 @@ export const FloatingToolbar: React.FC = () => {
       <div className="relative">
         <button
           onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors); }}
-          className="p-1.5 rounded hover:bg-[#383838] transition-colors flex items-center gap-1"
-          title="Color & Highlight"
+          className="p-1.5 rounded hover:bg-[#383838] transition-colors flex items-center gap-1 cursor-pointer"
+          title={t('color', language)}
         >
           <Palette className="w-3.5 h-3.5 text-amber-400" />
         </button>
 
         {showColors && (
-          <div className="absolute left-0 top-8 z-50 w-44 bg-[#2b2b2b] border border-[#3e3e3e] rounded-lg shadow-xl p-2 text-xs">
-            <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Text Color</div>
+          <div className="absolute left-0 rtl:left-auto rtl:right-0 top-8 z-50 w-44 bg-[#2b2b2b] border border-[#3e3e3e] rounded-lg shadow-xl p-2 text-xs">
+            <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">
+              {language === 'ar' ? 'لون الخط' : 'Text Color'}
+            </div>
             <div className="grid grid-cols-5 gap-1 mb-2">
               {PALETTE_COLORS.slice(0, 10).map((c) => (
                 <button
                   key={c.name}
                   onMouseDown={(e) => { e.preventDefault(); applyColor(c, false); }}
-                  className="w-6 h-6 rounded flex items-center justify-center font-bold hover:scale-110"
+                  className="w-6 h-6 rounded flex items-center justify-center font-bold hover:scale-110 cursor-pointer"
                   style={{ color: c.text }}
                   title={c.name}
                 >
@@ -149,13 +156,15 @@ export const FloatingToolbar: React.FC = () => {
               ))}
             </div>
 
-            <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Highlight</div>
+            <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">
+              {language === 'ar' ? 'لون التمييز' : 'Highlight'}
+            </div>
             <div className="grid grid-cols-5 gap-1">
               {PALETTE_COLORS.slice(1, 10).map((c) => (
                 <button
                   key={`bg-${c.name}`}
                   onMouseDown={(e) => { e.preventDefault(); applyColor(c, true); }}
-                  className="w-6 h-6 rounded border border-white/20 hover:scale-110"
+                  className="w-6 h-6 rounded border border-white/20 hover:scale-110 cursor-pointer"
                   style={{ backgroundColor: c.bg }}
                   title={`${c.name} Background`}
                 />

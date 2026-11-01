@@ -280,6 +280,7 @@ export function loadWorkspace(): WorkspaceState {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.workspaces && parsed.activeWorkspaceId) {
+        if (!parsed.language) parsed.language = 'en';
         return sanitizeWorkspaceState(parsed);
       }
     }
@@ -304,6 +305,7 @@ export function loadWorkspace(): WorkspaceState {
           activeWorkspaceId: 'ws-default',
           sidebarOpen: oldParsed.sidebarOpen ?? true,
           theme: oldParsed.theme || 'dark',
+          language: 'en',
         };
         return sanitizeWorkspaceState(migratedState);
       }
@@ -319,6 +321,7 @@ export function loadWorkspace(): WorkspaceState {
     activeWorkspaceId: 'ws-default',
     sidebarOpen: true,
     theme: 'dark', // Dark by default!
+    language: 'en',
   };
 }
 

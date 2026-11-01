@@ -5,13 +5,15 @@ import {
 } from 'lucide-react';
 import { Database, DatabaseColumn, DatabaseRow, DatabaseViewType, ColumnType } from '../types';
 import { nanoid } from 'nanoid';
+import { t, Language } from '../i18n';
 
 interface DatabaseViewProps {
   database: Database;
+  language?: Language;
   onUpdateDatabase: (updated: Database) => void;
 }
 
-export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDatabase }) => {
+export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, language = 'en', onUpdateDatabase }) => {
   const [activeView, setActiveView] = useState<DatabaseViewType>(database.view || 'table');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddColumn, setShowAddColumn] = useState(false);
@@ -32,7 +34,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
     const newRow: DatabaseRow = {
       id: newRowId,
       cells: {
-        'c-title': 'Untitled item',
+        'c-title': t('untitledItem', language),
         'c-status': statusVal || 'not-started',
       },
     };
@@ -103,11 +105,12 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
 
   // Status column options
   const statusCol = database.columns.find((c) => c.type === 'status');
-  const statusOptions = statusCol?.options || [
-    { id: 'not-started', label: 'Not Started', color: '#e0e0e0' },
-    { id: 'in-progress', label: 'In Progress', color: '#cce2ff' },
-    { id: 'done', label: 'Completed', color: '#c3f0c8' },
+  const defaultStatusOptions = [
+    { id: 'not-started', label: t('notStarted', language), color: '#e0e0e0' },
+    { id: 'in-progress', label: t('inProgress', language), color: '#cce2ff' },
+    { id: 'done', label: t('done', language), color: '#c3f0c8' },
   ];
+  const statusOptions = statusCol?.options || defaultStatusOptions;
 
   // Filter rows based on search
   const filteredRows = database.rows.filter((row) => {
@@ -125,6 +128,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
         <div className="flex items-center gap-2">
           <input
             type="text"
+            dir="auto"
             value={database.title}
             onChange={(e) => onUpdateDatabase({ ...database, title: e.target.value })}
             className="font-semibold text-sm bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 text-[#37352f] dark:text-[#ebebeb]"
@@ -134,18 +138,19 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
         <div className="flex items-center gap-3">
           {/* Quick Filter */}
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 rtl:left-auto rtl:right-2 pointer-events-none" />
             <input
               type="text"
+              dir="auto"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter tasks..."
-              className="pl-7 pr-2 py-1 text-xs bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-md w-32 focus:w-44 transition-all focus:outline-none text-[#37352f] dark:text-[#ebebeb]"
+              placeholder={t('searchTable', language)}
+              className="pl-7 rtl:pl-2 rtl:pr-7 pr-2 py-1 text-xs bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-md w-32 focus:w-44 transition-all focus:outline-none text-[#37352f] dark:text-[#ebebeb]"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="absolute right-1.5 rtl:right-auto rtl:left-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -156,25 +161,25 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
           <div className="flex items-center gap-1 bg-[#efefee] dark:bg-[#1a1a1a] p-1 rounded-lg">
             <button
               onClick={() => handleViewChange('table')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
                 activeView === 'table'
                   ? 'bg-white dark:bg-[#2e2e2e] text-[#37352f] dark:text-[#ebebeb] shadow-xs'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <TableIcon className="w-3.5 h-3.5" />
-              Table
+              {t('tableView', language)}
             </button>
             <button
               onClick={() => handleViewChange('board')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
                 activeView === 'board'
                   ? 'bg-white dark:bg-[#2e2e2e] text-[#37352f] dark:text-[#ebebeb] shadow-xs'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <Kanban className="w-3.5 h-3.5" />
-              Board
+              {t('boardView', language)}
             </button>
           </div>
         </div>
@@ -183,7 +188,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
       {/* View Content */}
       {activeView === 'table' ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-start text-xs border-collapse">
             <thead>
               <tr className="border-b border-[#e9e9e7] dark:border-[#2e2e2e] bg-[#fbfbfa] dark:bg-[#222222] text-gray-500 dark:text-gray-400">
                 <th className="w-10 px-3 py-2 text-center font-normal">#</th>
@@ -201,7 +206,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                       {col.id !== 'c-title' && (
                         <button
                           onClick={() => handleDeleteColumn(col.id)}
-                          className="opacity-0 group-hover/colhead:opacity-100 p-0.5 hover:text-red-500 text-gray-400 rounded"
+                          className="opacity-0 group-hover/colhead:opacity-100 p-0.5 hover:text-red-500 text-gray-400 rounded cursor-pointer"
                           title="Delete column"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -215,10 +220,10 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                 <th className="w-24 px-2 py-2 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
                   <button
                     onClick={() => setShowAddColumn(true)}
-                    className="flex items-center gap-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    className="flex items-center gap-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Column</span>
+                    <span>{t('addColumn', language)}</span>
                   </button>
                 </th>
                 <th className="w-10 px-2 py-2 text-center"></th>
@@ -282,6 +287,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                       <td key={col.id} className="px-3 py-2 border-r border-[#e9e9e7] dark:border-[#2e2e2e]">
                         <input
                           type="text"
+                          dir="auto"
                           value={val || ''}
                           onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
                           className="w-full bg-transparent border-none focus:outline-none text-xs text-[#37352f] dark:text-[#ebebeb] placeholder-gray-400"
@@ -294,7 +300,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                   <td className="px-2 py-2 text-center">
                     <button
                       onClick={() => handleDeleteRow(row.id)}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-1 rounded"
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-1 rounded cursor-pointer"
                       title="Delete row"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -308,10 +314,10 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
           {/* Add Row Button */}
           <button
             onClick={() => handleAddRow()}
-            className="w-full flex items-center gap-1.5 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 hover:bg-[#efefee] dark:hover:bg-[#282828] transition-colors"
+            className="w-full flex items-center gap-1.5 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 hover:bg-[#efefee] dark:hover:bg-[#282828] transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>New Item</span>
+            <span>{t('newRow', language)}</span>
           </button>
         </div>
       ) : (
@@ -364,8 +370,8 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                   </div>
                   <button
                     onClick={() => handleAddRow(status.id)}
-                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#323232] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                    title="Add card"
+                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#323232] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                    title={t('newRow', language)}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -399,14 +405,16 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({ database, onUpdateDa
                             <GripVertical className="w-3 h-3 text-gray-300 dark:text-gray-600 shrink-0 group-hover:text-gray-500" />
                             <input
                               type="text"
+                              dir="auto"
                               value={row.cells['c-title'] || ''}
                               onChange={(e) => handleCellChange(row.id, 'c-title', e.target.value)}
+                              placeholder={t('untitledCard', language)}
                               className="w-full bg-transparent font-medium text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
                             />
                           </div>
                           <button
                             onClick={() => handleDeleteRow(row.id)}
-                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-0.5 rounded"
+                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-0.5 rounded cursor-pointer"
                             title="Delete card"
                           >
                             <Trash2 className="w-3 h-3" />

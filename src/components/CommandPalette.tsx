@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Plus, Moon, Sun, Download, X } from 'lucide-react';
+import { Search, FileText, Plus, Moon, Sun, Download, X, Languages } from 'lucide-react';
 import { Page } from '../types';
+import { t, Language } from '../i18n';
 
 interface CommandPaletteProps {
   isOpen: boolean;
   pages: Record<string, Page>;
   theme: 'light' | 'dark';
+  language?: Language;
   onClose: () => void;
   onSelectPage: (id: string) => void;
   onAddPage: () => void;
   onToggleTheme: () => void;
+  onToggleLanguage?: () => void;
   onExportWorkspace: () => void;
 }
 
@@ -17,10 +20,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   pages,
   theme,
+  language = 'en',
   onClose,
   onSelectPage,
   onAddPage,
   onToggleTheme,
+  onToggleLanguage,
   onExportWorkspace,
 }) => {
   const [query, setQuery] = useState('');
@@ -51,7 +56,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const actions = [
     {
       id: 'action-new',
-      label: 'Create new page',
+      label: t('createNewPage', language),
       icon: <Plus className="w-4 h-4 text-green-500" />,
       run: () => {
         onAddPage();
@@ -59,8 +64,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
+      id: 'action-language',
+      label: language === 'ar' ? 'التبديل إلى الإنجليزية (English)' : 'التبديل إلى العربية (Arabic)',
+      icon: <Languages className="w-4 h-4 text-sky-500" />,
+      run: () => {
+        onToggleLanguage?.();
+        onClose();
+      },
+    },
+    {
       id: 'action-theme',
-      label: `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`,
+      label: theme === 'dark' ? t('switchToLightMode', language) : t('switchToDarkMode', language),
       icon: theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-blue-500" />,
       run: () => {
         onToggleTheme();
@@ -69,7 +83,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'action-export',
-      label: 'Export entire workspace as JSON',
+      label: t('exportEntireWorkspace', language),
       icon: <Download className="w-4 h-4 text-indigo-500" />,
       run: () => {
         onExportWorkspace();
@@ -82,7 +96,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     ...filteredPages.map((p) => ({
       type: 'page',
       id: p.id,
-      label: p.title || 'Untitled',
+      label: p.title || t('untitled', language),
       icon: p.icon || '📄',
       subtext: p.blocks[0]?.content ? p.blocks[0].content.slice(0, 60).replace(/<[^>]*>/g, '') : '',
       run: () => {
@@ -95,7 +109,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: a.id,
       label: a.label,
       icon: a.icon,
-      subtext: 'Quick Action',
+      subtext: t('quickActions', language),
       run: a.run,
     })),
   ];
@@ -126,13 +140,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           <input
             ref={inputRef}
             type="text"
+            dir="auto"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Search pages or type a command..."
+            placeholder={t('searchPagesCommands', language)}
             className="flex-1 bg-transparent text-sm focus:outline-none text-[#37352f] dark:text-[#ebebeb] placeholder-gray-400"
           />
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -143,7 +158,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         {/* Results List */}
         <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {allItems.length === 0 ? (
-            <div className="text-center py-8 text-xs text-gray-400">No results found for "{query}"</div>
+            <div className="text-center py-8 text-xs text-gray-400">{t('noResultsFound', language)}</div>
           ) : (
             allItems.map((item, idx) => {
               const isSelected = idx === selectedIndex;
@@ -162,9 +177,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">{item.label}</div>
+                    <div dir="auto" className="text-xs font-medium truncate">{item.label}</div>
                     {item.subtext && (
-                      <div className="text-[11px] text-gray-400 truncate">{item.subtext}</div>
+                      <div dir="auto" className="text-[11px] text-gray-400 truncate">{item.subtext}</div>
                     )}
                   </div>
                   {isSelected && (
@@ -181,13 +196,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         {/* Footer shortcuts tip */}
         <div className="px-4 py-2 border-t border-[#e9e9e7] dark:border-[#2e2e2e] bg-[#fbfbfa] dark:bg-[#202020] text-[11px] text-gray-400 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span>Navigation:</span>
             <kbd className="bg-gray-200 dark:bg-[#323232] px-1 py-0.5 rounded font-mono">↑</kbd>
             <kbd className="bg-gray-200 dark:bg-[#323232] px-1 py-0.5 rounded font-mono">↓</kbd>
-            <span>Select:</span>
+            <span>{t('navigate', language)}</span>
+            <span className="mx-1">•</span>
             <kbd className="bg-gray-200 dark:bg-[#323232] px-1 py-0.5 rounded font-mono">Enter</kbd>
+            <span>{t('select', language)}</span>
           </div>
-          <span>Potato PC Search: 0ms</span>
+          <span className="text-[10px] text-emerald-500 font-mono">Nota v1.0.1</span>
         </div>
       </div>
     </div>

@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, Plus, Star, FileText, ChevronRight, ChevronDown, 
   Trash2, Moon, Sun, Download, Upload, Cpu, MoreHorizontal, Copy,
-  Check, Edit3, Smile, X, Layers, Briefcase, Layout
+  Check, Edit3, Smile, X, Layers, Briefcase, Layout, Languages
 } from 'lucide-react';
 import { Page, Workspace } from '../types';
+import { t, Language } from '../i18n';
 
 interface SidebarProps {
   workspaces: Record<string, Workspace>;
@@ -13,12 +14,14 @@ interface SidebarProps {
   activePageId: string;
   isOpen: boolean;
   theme: 'light' | 'dark';
+  language: Language;
   onSelectPage: (id: string) => void;
   onAddPage: (parentId?: string | null) => void;
   onDeletePage: (id: string) => void;
   onDuplicatePage: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onToggleTheme: () => void;
+  onToggleLanguage: () => void;
   onOpenSearch: () => void;
   onOpenTrash: () => void;
   onOpenTemplates: () => void;
@@ -41,12 +44,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activePageId,
   isOpen,
   theme,
+  language,
   onSelectPage,
   onAddPage,
   onDeletePage,
   onDuplicatePage,
   onToggleFavorite,
   onToggleTheme,
+  onToggleLanguage,
   onOpenSearch,
   onOpenTrash,
   onOpenTemplates,
@@ -135,8 +140,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div key={page.id} className="relative group/page">
         <div
           onClick={() => onSelectPage(page.id)}
-          style={{ paddingLeft: `${depth * 14 + 8}px` }}
-          className={`flex items-center gap-1.5 py-1 pr-2 rounded-md cursor-pointer transition-colors ${
+          style={{ paddingInlineStart: `${depth * 14 + 8}px` }}
+          className={`flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer transition-colors ${
             activePageId === page.id
               ? 'bg-[#e8e8e6] dark:bg-[#323232] font-medium'
               : 'hover:bg-[#efefee] dark:hover:bg-[#2c2c2c]'
@@ -149,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="p-0.5 rounded hover:bg-gray-300 dark:hover:bg-[#404040] text-gray-400"
             >
               <ChevronRight
-                className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : 'rtl:rotate-180'}`}
               />
             </button>
           ) : (
@@ -157,8 +162,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <span className="text-sm select-none">{page.icon || '📄'}</span>
-          <span className="truncate flex-1 text-xs text-[#37352f] dark:text-[#ebebeb]">
-            {page.title || 'Untitled'}
+          <span dir="auto" className="truncate flex-1 text-xs text-[#37352f] dark:text-[#ebebeb]">
+            {page.title || t('untitled', language)}
           </span>
 
           {/* Actions on hover */}
@@ -170,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 setCollapsedPages((prev) => ({ ...prev, [page.id]: false }));
               }}
               className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#383838] text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              title="Add sub-page"
+              title={t('createNewPage', language)}
             >
               <Plus className="w-3 h-3" />
             </button>
@@ -180,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onDeletePage(page.id);
               }}
               className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#383838] text-gray-400 hover:text-red-500"
-              title="Delete page"
+              title={t('delete', language)}
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -198,19 +203,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 h-screen bg-[#fbfbfa] dark:bg-[#202020] border-r border-[#e9e9e7] dark:border-[#2e2e2e] flex flex-col justify-between shrink-0 select-none text-xs text-[#37352f] dark:text-[#ebebeb] z-40 transition-colors">
+    <aside className="w-64 h-screen bg-[#fbfbfa] dark:bg-[#202020] border-r rtl:border-l rtl:border-r-0 border-[#e9e9e7] dark:border-[#2e2e2e] flex flex-col justify-between shrink-0 select-none text-xs text-[#37352f] dark:text-[#ebebeb] z-40 transition-colors">
       {/* Top Section */}
       <div className="flex-1 overflow-y-auto">
         {/* Workspace Switcher Header */}
         <div className="relative p-2 border-b border-[#e9e9e7] dark:border-[#2e2e2e]">
           <button
             onClick={() => setIsWorkspaceMenuOpen(!isWorkspaceMenuOpen)}
-            className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors group text-left cursor-pointer"
+            className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors group text-start cursor-pointer"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-base select-none">{currentWorkspace?.icon || '🚀'}</span>
               <span className="font-semibold text-sm truncate max-w-[130px] text-[#37352f] dark:text-[#ebebeb]">
-                {currentWorkspace?.name || 'Workspace'}
+                {currentWorkspace?.name || t('workspace', language)}
               </span>
             </div>
 
@@ -223,10 +228,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isWorkspaceMenuOpen && (
             <div
               ref={wsDropdownRef}
-              className="absolute left-2 top-13 z-50 w-[240px] bg-white dark:bg-[#242424] border border-[#e2e2e0] dark:border-[#383838] rounded-xl shadow-2xl p-2.5 animate-in fade-in zoom-in-95"
+              className="absolute left-2 rtl:left-auto rtl:right-2 top-13 z-50 w-[240px] bg-white dark:bg-[#242424] border border-[#e2e2e0] dark:border-[#383838] rounded-xl shadow-2xl p-2.5 animate-in fade-in zoom-in-95"
             >
               <div className="px-1 pb-1.5 flex items-center justify-between text-[11px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-[#333333]">
-                <span>Workspaces</span>
+                <span>{t('workspaces', language)}</span>
                 <span className="text-[10px] text-emerald-500 font-mono font-medium">30MB RAM</span>
               </div>
 
@@ -280,7 +285,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               className="w-full bg-white dark:bg-[#1a1a1a] border border-blue-500 rounded px-1.5 py-0.5 text-xs text-[#37352f] dark:text-[#ebebeb] focus:outline-none"
                             />
                           ) : (
-                            <span className="text-xs font-medium truncate text-[#37352f] dark:text-[#ebebeb]">
+                            <span dir="auto" className="text-xs font-medium truncate text-[#37352f] dark:text-[#ebebeb]">
                               {ws.name}
                             </span>
                           )}
@@ -373,9 +378,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <input
                       type="text"
                       autoFocus
+                      dir="auto"
                       value={newWsName}
                       onChange={(e) => setNewWsName(e.target.value)}
-                      placeholder="Workspace name..."
+                      placeholder={t('workspaceName', language)}
                       className="flex-1 bg-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-[#444] rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 text-[#37352f] dark:text-[#ebebeb]"
                     />
                   </div>
@@ -384,14 +390,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       type="submit"
                       className="flex-1 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium cursor-pointer"
                     >
-                      Create
+                      {t('create', language)}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsCreatingWorkspace(false)}
                       className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-500 text-xs cursor-pointer"
                     >
-                      Cancel
+                      {t('cancel', language)}
                     </button>
                   </div>
                 </form>
@@ -401,7 +407,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-[#444] hover:bg-[#f0f0ef] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 text-xs font-medium transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>New workspace</span>
+                  <span>{t('newWorkspace', language)}</span>
                 </button>
               )}
             </div>
@@ -416,7 +422,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className="flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-gray-400" />
-              <span>Search</span>
+              <span>{t('search', language)}</span>
             </div>
             <kbd className="text-[10px] bg-gray-200/60 dark:bg-[#323232] px-1 py-0.5 rounded text-gray-500 font-mono">
               Ctrl+K
@@ -428,7 +434,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors"
           >
             <Plus className="w-3.5 h-3.5 text-gray-400" />
-            <span>New page</span>
+            <span>{t('createNewPage', language)}</span>
           </button>
 
           <button
@@ -436,7 +442,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors"
           >
             <Layout className="w-3.5 h-3.5 text-blue-500" />
-            <span>Templates</span>
+            <span>{t('templates', language)}</span>
           </button>
         </div>
 
@@ -445,7 +451,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="mt-4 px-2">
             <div className="px-2.5 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
               <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span>Favorites</span>
+              <span>{t('favorites', language)}</span>
             </div>
             <div className="space-y-0.5 mt-0.5">
               {favoritePages.map((page) => (
@@ -459,7 +465,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <span>{page.icon || '📄'}</span>
-                  <span className="truncate flex-1">{page.title || 'Untitled'}</span>
+                  <span dir="auto" className="truncate flex-1">{page.title || t('untitled', language)}</span>
                 </div>
               ))}
             </div>
@@ -469,11 +475,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Hierarchical Page Tree */}
         <div className="mt-4 px-2">
           <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-            <span>Pages</span>
+            <span>{t('pages', language)}</span>
             <button
               onClick={() => onAddPage(null)}
               className="p-0.5 rounded hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-              title="Add a page"
+              title={t('createNewPage', language)}
             >
               <Plus className="w-3 h-3" />
             </button>
@@ -487,16 +493,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom Footer Controls */}
       <div className="p-2 border-t border-[#e9e9e7] dark:border-[#2e2e2e] space-y-1">
+        {/* Language Switcher */}
+        <button
+          onClick={onToggleLanguage}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          title="Toggle English / العربية"
+        >
+          <div className="flex items-center gap-2">
+            <Languages className="w-3.5 h-3.5 text-blue-500" />
+            <span>{t('language', language)}</span>
+          </div>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-300">
+            {language === 'ar' ? 'العربية' : 'English'}
+          </span>
+        </button>
+
         <button
           onClick={onToggleTheme}
           className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2">
             {theme === 'dark' ? <Moon className="w-3.5 h-3.5 text-blue-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
-            <span>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>
+            <span>{theme === 'dark' ? t('darkMode', language) : t('lightMode', language)}</span>
           </div>
           <span className="text-[10px] text-gray-400 uppercase font-mono">
-            {theme === 'dark' ? 'ON' : 'OFF'}
+            {theme === 'dark' ? t('on', language) : t('off', language)}
           </span>
         </button>
 
@@ -505,19 +526,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
         >
           <Trash2 className="w-3.5 h-3.5 text-gray-400" />
-          <span>Trash & Archive</span>
+          <span>{t('trashAndArchive', language)}</span>
         </button>
 
         <div className="flex items-center gap-1 pt-1 border-t border-[#e9e9e7] dark:border-[#2e2e2e]">
           <button
             onClick={onExportWorkspace}
             className="flex-1 flex items-center justify-center gap-1 py-1 rounded hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer"
-            title="Backup entire workspace as JSON"
+            title={t('exportWorkspace', language)}
           >
-            <Download className="w-3 h-3" /> Export
+            <Download className="w-3 h-3" /> {t('export', language)}
           </button>
           <label className="flex-1 flex items-center justify-center gap-1 py-1 rounded hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer">
-            <Upload className="w-3 h-3" /> Import
+            <Upload className="w-3 h-3" /> {t('import', language)}
             <input type="file" accept=".json" onChange={handleFileImport} className="hidden" />
           </label>
         </div>

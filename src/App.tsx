@@ -12,6 +12,7 @@ import { TrashModal } from './components/TrashModal';
 import { FloatingToolbar } from './components/FloatingToolbar';
 import { TemplatesModal } from './components/TemplatesModal';
 import { Plus } from 'lucide-react';
+import { t, Language } from './i18n';
 
 export function App() {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(loadWorkspace);
@@ -31,6 +32,8 @@ export function App() {
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
 
+  const language: Language = workspaceState.language || 'en';
+
   // Sync theme class to document element
   useEffect(() => {
     if (workspaceState.theme === 'dark') {
@@ -39,6 +42,13 @@ export function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [workspaceState.theme]);
+
+  // Sync language and dir to document element
+  useEffect(() => {
+    const lang = workspaceState.language || 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, [workspaceState.language]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -295,6 +305,14 @@ export function App() {
     }));
   };
 
+  // Toggle interface language (English / Arabic)
+  const handleToggleLanguage = () => {
+    setWorkspaceState((prev) => ({
+      ...prev,
+      language: prev.language === 'ar' ? 'en' : 'ar',
+    }));
+  };
+
   // Block Operations
   const handleUpdateBlock = (updated: Block) => {
     if (!activePage) return;
@@ -527,12 +545,14 @@ export function App() {
         activePageId={currentWorkspace?.activePageId || ''}
         isOpen={workspaceState.sidebarOpen}
         theme={workspaceState.theme}
+        language={language}
         onSelectPage={handleSelectPage}
         onAddPage={handleAddPage}
         onDeletePage={handleDeletePage}
         onDuplicatePage={handleDuplicatePage}
         onToggleFavorite={handleToggleFavorite}
         onToggleTheme={handleToggleTheme}
+        onToggleLanguage={handleToggleLanguage}
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
         onOpenTrash={() => setIsTrashOpen(true)}
         onOpenTemplates={() => setIsTemplatesOpen(true)}
@@ -553,6 +573,7 @@ export function App() {
             <Navbar
               page={activePage}
               sidebarOpen={workspaceState.sidebarOpen}
+              language={language}
               onToggleSidebar={() =>
                 setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
               }
@@ -570,7 +591,7 @@ export function App() {
                 }`}
               >
                 {/* Page Cover & Title */}
-                <PageHeader page={activePage} onUpdatePage={handleUpdatePage} />
+                <PageHeader page={activePage} language={language} onUpdatePage={handleUpdatePage} />
 
                 {/* Blocks List */}
                 <div className="px-8 space-y-0.5">
@@ -579,6 +600,7 @@ export function App() {
                       key={block.id}
                       block={block}
                       index={idx}
+                      language={language}
                       isFocused={focusedBlockId === block.id}
                       database={block.databaseId ? currentWorkspace?.databases[block.databaseId] : undefined}
                       targetPageTitle={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].title : undefined}
@@ -605,7 +627,7 @@ export function App() {
                     className="py-12 cursor-text text-gray-400 text-xs flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Click to add a block below...</span>
+                    <span>{t('clickToAddBlock', language)}</span>
                   </div>
                 </div>
               </div>
@@ -613,23 +635,24 @@ export function App() {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-            <p className="text-sm">No page selected</p>
+            <p className="text-sm">{t('noPageSelected', language)}</p>
             <button
               onClick={() => handleAddPage(null)}
-              className="mt-3 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors"
+              className="mt-3 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors cursor-pointer"
             >
-              Create a new page
+              {t('createNewPage', language)}
             </button>
           </div>
         )}
       </main>
 
       {/* Floating Selection Formatting Bar */}
-      <FloatingToolbar />
+      <FloatingToolbar language={language} />
 
       {/* Starter Templates Modal */}
       <TemplatesModal
         isOpen={isTemplatesOpen}
+        language={language}
         onClose={() => setIsTemplatesOpen(false)}
         onApplyTemplate={handleApplyTemplate}
       />
@@ -637,6 +660,7 @@ export function App() {
       {/* Slash Menu Popup */}
       <SlashMenu
         isOpen={slashMenuState.isOpen}
+        language={language}
         onClose={() => setSlashMenuState((prev) => ({ ...prev, isOpen: false }))}
         onSelect={handleSelectSlashItem}
         query={slashMenuState.query}
@@ -648,10 +672,12 @@ export function App() {
         isOpen={isCommandPaletteOpen}
         pages={currentWorkspace?.pages || {}}
         theme={workspaceState.theme}
+        language={language}
         onClose={() => setIsCommandPaletteOpen(false)}
         onSelectPage={handleSelectPage}
         onAddPage={() => handleAddPage(null)}
         onToggleTheme={handleToggleTheme}
+        onToggleLanguage={handleToggleLanguage}
         onExportWorkspace={handleExportWorkspace}
       />
 
@@ -659,6 +685,7 @@ export function App() {
       <TrashModal
         isOpen={isTrashOpen}
         pages={currentWorkspace?.pages || {}}
+        language={language}
         onClose={() => setIsTrashOpen(false)}
         onRestorePage={handleRestorePage}
         onPermanentDeletePage={handlePermanentDeletePage}

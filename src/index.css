@@ -25,10 +25,26 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", Tahoma, sans-serif;
   user-select: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+[lang="ar"], [dir="rtl"] {
+  font-family: 'Cairo', 'Segoe UI', Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: normal !important;
+}
+
+/* Direction-aware plaintext auto bidi */
+[dir="auto"] {
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
+/* RTL Helpers */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
 }
 
 .font-serif {

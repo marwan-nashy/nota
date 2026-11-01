@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Image, Smile, Trash2, X } from 'lucide-react';
 import { Page } from '../types';
+import { t, Language } from '../i18n';
 
 interface PageHeaderProps {
   page: Page;
+  language: Language;
   onUpdatePage: (updated: Page) => void;
 }
 
@@ -22,7 +24,7 @@ const COVER_GRADIENTS = [
   'linear-gradient(135deg, #434343 0%, #000000 100%)',
 ];
 
-export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) => {
+export const PageHeader: React.FC<PageHeaderProps> = ({ page, language, onUpdatePage }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
 
@@ -34,17 +36,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
           style={{ background: page.cover }}
           className="h-44 w-full rounded-b-xl relative group transition-all"
         >
-          <div className="absolute right-4 bottom-3 opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity">
+          <div className="absolute right-4 rtl:right-auto rtl:left-4 bottom-3 opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity">
             <button
               onClick={() => setShowCoverPicker(true)}
-              className="bg-black/60 hover:bg-black/80 text-white text-xs px-2.5 py-1 rounded backdrop-blur-xs flex items-center gap-1.5 transition-colors"
+              className="bg-black/60 hover:bg-black/80 text-white text-xs px-2.5 py-1 rounded backdrop-blur-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Image className="w-3.5 h-3.5" /> Change cover
+              <Image className="w-3.5 h-3.5" /> {t('changeCover', language)}
             </button>
             <button
               onClick={() => onUpdatePage({ ...page, cover: null })}
-              className="bg-black/60 hover:bg-black/80 text-white text-xs p-1 rounded backdrop-blur-xs transition-colors"
-              title="Remove cover"
+              className="bg-black/60 hover:bg-black/80 text-white text-xs p-1 rounded backdrop-blur-xs transition-colors cursor-pointer"
+              title={t('removeCover', language)}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -54,9 +56,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
 
       {/* Cover Picker Dropdown */}
       {showCoverPicker && (
-        <div className="absolute right-4 top-20 z-40 bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-xl rounded-xl p-3 w-64 animate-in fade-in">
+        <div className="absolute right-4 rtl:right-auto rtl:left-4 top-20 z-40 bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-xl rounded-xl p-3 w-64 animate-in fade-in">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#383838] text-xs font-semibold text-gray-700 dark:text-gray-200">
-            <span>Select Cover Gradient</span>
+            <span>{t('selectGradient', language)}</span>
             <button onClick={() => setShowCoverPicker(false)}>
               <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
             </button>
@@ -70,7 +72,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
                   setShowCoverPicker(false);
                 }}
                 style={{ background: grad }}
-                className="h-12 rounded-lg border border-white/20 hover:scale-105 transition-transform"
+                className="h-12 rounded-lg border border-white/20 hover:scale-105 transition-transform cursor-pointer"
               />
             ))}
           </div>
@@ -84,16 +86,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="text-5xl hover:scale-110 active:scale-95 transition-transform select-none cursor-pointer filter drop-shadow-sm"
-            title="Change icon"
+            title={t('changeIcon', language)}
           >
             {page.icon || '📄'}
           </button>
 
           {/* Emoji Picker Modal */}
           {showEmojiPicker && (
-            <div className="absolute left-0 top-16 z-50 bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-2xl rounded-xl p-3 w-64 animate-in fade-in zoom-in-95">
+            <div className="absolute left-0 rtl:left-auto rtl:right-0 top-16 z-50 bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#2e2e2e] shadow-2xl rounded-xl p-3 w-64 animate-in fade-in zoom-in-95">
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#383838] text-xs font-semibold text-gray-700 dark:text-gray-200">
-                <span>Pick an icon</span>
+                <span>{t('pickIcon', language)}</span>
                 <button onClick={() => setShowEmojiPicker(false)}>
                   <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                 </button>
@@ -106,7 +108,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
                       onUpdatePage({ ...page, icon: emoji });
                       setShowEmojiPicker(false);
                     }}
-                    className="hover:scale-125 transition-transform p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333333]"
+                    className="hover:scale-125 transition-transform p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333333] cursor-pointer"
                   >
                     {emoji}
                   </button>
@@ -118,12 +120,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
 
         {/* Quick buttons when cover is absent */}
         {!page.cover && (
-          <div className="opacity-0 hover:opacity-100 flex items-center gap-2 ml-2 transition-opacity">
+          <div className="opacity-0 hover:opacity-100 flex items-center gap-2 mx-2 transition-opacity">
             <button
               onClick={() => onUpdatePage({ ...page, cover: COVER_GRADIENTS[0] })}
-              className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-[#2e2e2e]"
+              className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-[#2e2e2e] cursor-pointer"
             >
-              <Image className="w-3.5 h-3.5" /> Add cover
+              <Image className="w-3.5 h-3.5" /> {t('addCover', language)}
             </button>
           </div>
         )}
@@ -133,9 +135,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, onUpdatePage }) =>
       <div className="px-8 mt-2">
         <input
           type="text"
+          dir="auto"
           value={page.title}
           onChange={(e) => onUpdatePage({ ...page, title: e.target.value })}
-          placeholder="Untitled"
+          placeholder={t('pageTitlePlaceholder', language)}
           className="w-full text-4xl font-extrabold text-[#37352f] dark:text-[#ffffff] bg-transparent border-none focus:outline-none placeholder-gray-300 dark:placeholder-gray-600 tracking-tight"
         />
       </div>

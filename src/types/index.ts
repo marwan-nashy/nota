@@ -86,4 +86,5 @@ export interface WorkspaceState {
   activeWorkspaceId: string;
   sidebarOpen: boolean;
   theme: 'light' | 'dark';
+  language?: 'en' | 'ar';
 }

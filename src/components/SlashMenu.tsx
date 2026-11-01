@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   Type, Heading1, Heading2, Heading3, CheckSquare, List, ListOrdered, 
   ChevronRight, Quote, Minus, AlertCircle, Code, Table, Kanban,
   Image as ImageIcon, FileText, Sparkles
 } from 'lucide-react';
 import { BlockType } from '../types';
+import { t, Language } from '../i18n';
 
 interface SlashMenuProps {
   isOpen: boolean;
+  language?: Language;
   onClose: () => void;
   onSelect: (type: BlockType, extra?: any) => void;
   query: string;
@@ -19,129 +21,13 @@ interface MenuItem {
   label: string;
   description: string;
   icon: React.ReactNode;
-  category: 'Basic' | 'Lists' | 'Media' | 'Database' | 'Advanced';
+  category: string;
   extra?: any;
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  {
-    type: 'paragraph',
-    label: 'Text',
-    description: 'Just start writing with plain text.',
-    icon: <Type className="w-4 h-4 text-gray-500" />,
-    category: 'Basic',
-  },
-  {
-    type: 'heading1',
-    label: 'Heading 1',
-    description: 'Big section heading.',
-    icon: <Heading1 className="w-4 h-4 text-blue-500" />,
-    category: 'Basic',
-  },
-  {
-    type: 'heading2',
-    label: 'Heading 2',
-    description: 'Medium section heading.',
-    icon: <Heading2 className="w-4 h-4 text-blue-500" />,
-    category: 'Basic',
-  },
-  {
-    type: 'heading3',
-    label: 'Heading 3',
-    description: 'Small section heading.',
-    icon: <Heading3 className="w-4 h-4 text-blue-500" />,
-    category: 'Basic',
-  },
-  {
-    type: 'todo',
-    label: 'To-do list',
-    description: 'Track tasks with a to-do list.',
-    icon: <CheckSquare className="w-4 h-4 text-green-500" />,
-    category: 'Lists',
-  },
-  {
-    type: 'bullet',
-    label: 'Bulleted list',
-    description: 'Create a simple bulleted list.',
-    icon: <List className="w-4 h-4 text-orange-500" />,
-    category: 'Lists',
-  },
-  {
-    type: 'number',
-    label: 'Numbered list',
-    description: 'Create a list with numbering.',
-    icon: <ListOrdered className="w-4 h-4 text-yellow-500" />,
-    category: 'Lists',
-  },
-  {
-    type: 'toggle',
-    label: 'Toggle list',
-    description: 'Toggles can show and hide content.',
-    icon: <ChevronRight className="w-4 h-4 text-gray-500" />,
-    category: 'Lists',
-  },
-  {
-    type: 'page_link',
-    label: 'Sub-page',
-    description: 'Embed a child page inside this document.',
-    icon: <FileText className="w-4 h-4 text-indigo-500" />,
-    category: 'Basic',
-  },
-  {
-    type: 'image',
-    label: 'Image',
-    description: 'Embed an image via link or upload.',
-    icon: <ImageIcon className="w-4 h-4 text-rose-500" />,
-    category: 'Media',
-  },
-  {
-    type: 'callout',
-    label: 'Callout',
-    description: 'Make writing stand out with an icon.',
-    icon: <AlertCircle className="w-4 h-4 text-amber-500" />,
-    category: 'Advanced',
-  },
-  {
-    type: 'quote',
-    label: 'Quote',
-    description: 'Capture a quote or citation.',
-    icon: <Quote className="w-4 h-4 text-purple-500" />,
-    category: 'Advanced',
-  },
-  {
-    type: 'divider',
-    label: 'Divider',
-    description: 'Visually divide blocks with a line.',
-    icon: <Minus className="w-4 h-4 text-gray-400" />,
-    category: 'Advanced',
-  },
-  {
-    type: 'code',
-    label: 'Code',
-    description: 'Capture a code snippet with syntax styling.',
-    icon: <Code className="w-4 h-4 text-emerald-500" />,
-    category: 'Advanced',
-  },
-  {
-    type: 'database',
-    label: 'Table Database',
-    description: 'Spreadsheet-like tabular database view.',
-    icon: <Table className="w-4 h-4 text-indigo-500" />,
-    category: 'Database',
-    extra: { view: 'table' },
-  },
-  {
-    type: 'database',
-    label: 'Kanban Board',
-    description: 'Visual board view grouped by status.',
-    icon: <Kanban className="w-4 h-4 text-pink-500" />,
-    category: 'Database',
-    extra: { view: 'board' },
-  },
-];
-
 export const SlashMenu: React.FC<SlashMenuProps> = ({
   isOpen,
+  language = 'en',
   onClose,
   onSelect,
   query,
@@ -150,9 +36,127 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const filteredItems = MENU_ITEMS.filter((item) =>
+  const menuItems = useMemo<MenuItem[]>(() => [
+    {
+      type: 'paragraph',
+      label: t('blockText', language),
+      description: t('blockTextDesc', language),
+      icon: <Type className="w-4 h-4 text-gray-500" />,
+      category: t('catBasic', language),
+    },
+    {
+      type: 'heading1',
+      label: t('blockHeading1', language),
+      description: t('blockHeading1Desc', language),
+      icon: <Heading1 className="w-4 h-4 text-blue-500" />,
+      category: t('catBasic', language),
+    },
+    {
+      type: 'heading2',
+      label: t('blockHeading2', language),
+      description: t('blockHeading2Desc', language),
+      icon: <Heading2 className="w-4 h-4 text-blue-500" />,
+      category: t('catBasic', language),
+    },
+    {
+      type: 'heading3',
+      label: t('blockHeading3', language),
+      description: t('blockHeading3Desc', language),
+      icon: <Heading3 className="w-4 h-4 text-blue-500" />,
+      category: t('catBasic', language),
+    },
+    {
+      type: 'todo',
+      label: t('blockTodo', language),
+      description: t('blockTodoDesc', language),
+      icon: <CheckSquare className="w-4 h-4 text-green-500" />,
+      category: t('catLists', language),
+    },
+    {
+      type: 'bullet',
+      label: t('blockBullet', language),
+      description: t('blockBulletDesc', language),
+      icon: <List className="w-4 h-4 text-orange-500" />,
+      category: t('catLists', language),
+    },
+    {
+      type: 'number',
+      label: t('blockNumber', language),
+      description: t('blockNumberDesc', language),
+      icon: <ListOrdered className="w-4 h-4 text-yellow-500" />,
+      category: t('catLists', language),
+    },
+    {
+      type: 'toggle',
+      label: t('blockToggle', language),
+      description: t('blockToggleDesc', language),
+      icon: <ChevronRight className="w-4 h-4 text-gray-500" />,
+      category: t('catLists', language),
+    },
+    {
+      type: 'page_link',
+      label: t('blockSubpage', language),
+      description: t('blockSubpageDesc', language),
+      icon: <FileText className="w-4 h-4 text-indigo-500" />,
+      category: t('catBasic', language),
+    },
+    {
+      type: 'image',
+      label: t('blockImage', language),
+      description: t('blockImageDesc', language),
+      icon: <ImageIcon className="w-4 h-4 text-rose-500" />,
+      category: t('catMedia', language),
+    },
+    {
+      type: 'callout',
+      label: t('blockCallout', language),
+      description: t('blockCalloutDesc', language),
+      icon: <AlertCircle className="w-4 h-4 text-amber-500" />,
+      category: t('catAdvanced', language),
+    },
+    {
+      type: 'quote',
+      label: t('blockQuote', language),
+      description: t('blockQuoteDesc', language),
+      icon: <Quote className="w-4 h-4 text-purple-500" />,
+      category: t('catAdvanced', language),
+    },
+    {
+      type: 'divider',
+      label: t('blockDivider', language),
+      description: t('blockDividerDesc', language),
+      icon: <Minus className="w-4 h-4 text-gray-400" />,
+      category: t('catAdvanced', language),
+    },
+    {
+      type: 'code',
+      label: t('blockCode', language),
+      description: t('blockCodeDesc', language),
+      icon: <Code className="w-4 h-4 text-emerald-500" />,
+      category: t('catAdvanced', language),
+    },
+    {
+      type: 'database',
+      label: t('blockTable', language),
+      description: t('blockTableDesc', language),
+      icon: <Table className="w-4 h-4 text-indigo-500" />,
+      category: t('catDatabase', language),
+      extra: { view: 'table' },
+    },
+    {
+      type: 'database',
+      label: t('blockBoard', language),
+      description: t('blockBoardDesc', language),
+      icon: <Kanban className="w-4 h-4 text-pink-500" />,
+      category: t('catDatabase', language),
+      extra: { view: 'board' },
+    },
+  ], [language]);
+
+  const filteredItems = menuItems.filter((item) =>
     item.label.toLowerCase().includes(query.toLowerCase()) ||
-    item.description.toLowerCase().includes(query.toLowerCase())
+    item.description.toLowerCase().includes(query.toLowerCase()) ||
+    item.type.toLowerCase().includes(query.toLowerCase())
   );
 
   useEffect(() => {
@@ -209,11 +213,11 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       className="fixed z-50 w-72 max-h-80 overflow-y-auto rounded-lg border border-[#e9e9e7] dark:border-[#2e2e2e] bg-white dark:bg-[#252525] shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-100"
     >
       <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-        Basic blocks
+        {t('catBasic', language)}
       </div>
 
       {filteredItems.length === 0 ? (
-        <div className="px-3 py-4 text-center text-xs text-gray-400">No matching blocks</div>
+        <div className="px-3 py-4 text-center text-xs text-gray-400">{t('noResultsFound', language)}</div>
       ) : (
         filteredItems.map((item, idx) => {
           const isSelected = idx === selectedIndex;
@@ -222,7 +226,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
               key={`${item.type}-${item.label}`}
               onClick={() => onSelect(item.type, item.extra)}
               onMouseEnter={() => setSelectedIndex(idx)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-start transition-colors cursor-pointer ${
                 isSelected
                   ? 'bg-[#efefee] dark:bg-[#323232] text-[#37352f] dark:text-[#ebebeb]'
                   : 'hover:bg-[#f5f5f4] dark:hover:bg-[#2c2c2c] text-[#37352f] dark:text-[#ebebeb]'
