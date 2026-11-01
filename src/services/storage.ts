@@ -1,4 +1,4 @@
-import { Page, Database, Workspace, WorkspaceState } from '../types';
+import { Page, Database, Workspace, WorkspaceState, DEFAULT_FEATURE_FLAGS } from '../types';
 
 const STORAGE_KEY = 'nota_workspace_v2';
 const LEGACY_STORAGE_KEY_V2 = 'better_notion_workspace_v2';
@@ -281,6 +281,7 @@ export function loadWorkspace(): WorkspaceState {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.workspaces && parsed.activeWorkspaceId) {
         if (!parsed.language) parsed.language = 'en';
+        parsed.features = { ...DEFAULT_FEATURE_FLAGS, ...(parsed.features || {}) };
         return sanitizeWorkspaceState(parsed);
       }
     }
@@ -322,6 +323,7 @@ export function loadWorkspace(): WorkspaceState {
     sidebarOpen: true,
     theme: 'dark', // Dark by default!
     language: 'en',
+    features: DEFAULT_FEATURE_FLAGS,
   };
 }
 

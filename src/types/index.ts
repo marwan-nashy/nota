@@ -92,10 +92,35 @@ export interface Workspace {
   createdAt: number;
 }
 
+export interface FeatureFlags {
+  graph: boolean;
+  diagrams: boolean;
+  math: boolean;
+  dailyNotes: boolean;
+  backlinks: boolean;
+  vault: boolean;
+  toc: boolean;
+  databases: boolean;
+  templates: boolean;
+}
+
+export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
+  graph: true,
+  diagrams: true,
+  math: true,
+  dailyNotes: true,
+  backlinks: true,
+  vault: true,
+  toc: true,
+  databases: true,
+  templates: true,
+};
+
 export interface WorkspaceState {
   workspaces: Record<string, Workspace>;
   activeWorkspaceId: string;
   sidebarOpen: boolean;
   theme: AppTheme;
   language?: 'en' | 'ar';
+  features?: FeatureFlags;
 }

@@ -3,9 +3,9 @@ import {
   Search, Plus, Star, FileText, ChevronRight, ChevronDown, 
   Trash2, Moon, Sun, Download, Upload, Cpu, MoreHorizontal, Copy,
   Check, Edit3, Smile, X, Layers, Briefcase, Layout, Languages,
-  Calendar, CalendarDays, ChevronLeft, Network
+  Calendar, CalendarDays, ChevronLeft, Network, Settings
 } from 'lucide-react';
-import { Page, Workspace, AppTheme } from '../types';
+import { Page, Workspace, AppTheme, FeatureFlags } from '../types';
 import { t, Language } from '../i18n';
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ interface SidebarProps {
   isOpen: boolean;
   theme: AppTheme;
   language: Language;
+  features?: FeatureFlags;
   onSelectPage: (id: string) => void;
   onAddPage: (parentId?: string | null) => void;
   onDeletePage: (id: string) => void;
@@ -29,6 +30,7 @@ interface SidebarProps {
   onOpenGraphView?: () => void;
   onOpenDailyNote?: () => void;
   onSelectDate?: (dateStr: string) => void;
+  onOpenSettings?: (tab?: 'features' | 'updates') => void;
   onExportWorkspace: () => void;
   onImportWorkspace: (json: string) => void;
   onCloseSidebar: () => void;
@@ -49,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   theme,
   language,
+  features,
   onSelectPage,
   onAddPage,
   onDeletePage,
@@ -62,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenGraphView,
   onOpenDailyNote,
   onSelectDate,
+  onOpenSettings,
   onExportWorkspace,
   onImportWorkspace,
   onCloseSidebar,
@@ -468,128 +472,136 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>{t('createNewPage', language)}</span>
           </button>
 
-          <button
-            onClick={onOpenTemplates}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
-          >
-            <Layout className="w-3.5 h-3.5 text-blue-500" />
-            <span>{t('templates', language)}</span>
-          </button>
+          {(!features || features.templates) && (
+            <button
+              onClick={onOpenTemplates}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+            >
+              <Layout className="w-3.5 h-3.5 text-blue-500" />
+              <span>{t('templates', language)}</span>
+            </button>
+          )}
 
           {/* Interactive Knowledge Graph */}
-          <button
-            onClick={onOpenGraphView}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
-          >
-            <Network className="w-3.5 h-3.5 text-emerald-500" />
-            <span>{t('graphView', language)}</span>
-          </button>
+          {(!features || features.graph) && (
+            <button
+              onClick={onOpenGraphView}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+            >
+              <Network className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{t('graphView', language)}</span>
+            </button>
+          )}
 
           {/* Daily Note & Mini-Calendar Quick Action */}
-          <button
-            onClick={onOpenDailyNote}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-              <span>{t('dailyNote', language)}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40">
-                {t('today', language)}
-              </span>
+          {(!features || features.dailyNotes) && (
+            <>
               <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsCalendarOpen(!isCalendarOpen);
-                }}
-                className="p-0.5 hover:bg-gray-200 dark:hover:bg-[#383838] rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                title={t('calendar', language)}
+                onClick={onOpenDailyNote}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
               >
-                <ChevronDown className={`w-3 h-3 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{t('dailyNote', language)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40">
+                    {t('today', language)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCalendarOpen(!isCalendarOpen);
+                    }}
+                    className="p-0.5 hover:bg-gray-200 dark:hover:bg-[#383838] rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    title={t('calendar', language)}
+                  >
+                    <ChevronDown className={`w-3 h-3 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
               </button>
-            </div>
-          </button>
 
-          {/* Expandable Mini-Calendar */}
-          {isCalendarOpen && (
-            <div className="p-2.5 my-1 rounded-xl bg-white dark:bg-[#202020] border border-gray-200 dark:border-[#2e2e2e] shadow-xs text-xs animate-in fade-in duration-150">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2a2a2a]">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
-                    else { setCalMonth(calMonth - 1); }
-                  }}
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-500"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
-                </button>
-                <span className="font-semibold text-gray-800 dark:text-gray-200 text-[11px]">
-                  {language === 'ar'
-                    ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'][calMonth]
-                    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][calMonth]}{' '}
-                  {calYear}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
-                    else { setCalMonth(calMonth + 1); }
-                  }}
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-500"
-                >
-                  <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
-                </button>
-              </div>
-
-              {/* Day header row */}
-              <div className="grid grid-cols-7 gap-1 text-center font-mono text-[10px] text-gray-400 mb-1">
-                {(language === 'ar' ? ['أ', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
-                  <div key={i}>{d}</div>
-                ))}
-              </div>
-
-              {/* Days grid */}
-              <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                {Array.from({ length: new Date(calYear, calMonth, 1).getDay() }).map((_, i) => (
-                  <div key={`empty-${i}`} />
-                ))}
-                {Array.from({ length: new Date(calYear, calMonth + 1, 0).getDate() }).map((_, i) => {
-                  const d = i + 1;
-                  const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                  const isToday = dateStr === new Date().toISOString().slice(0, 10);
-                  const hasNote = Object.values(pages).some(
-                    (p) => !p.isArchived && (p.dateString === dateStr || (p.title && p.title.includes(dateStr)))
-                  );
-
-                  return (
+              {/* Expandable Mini-Calendar */}
+              {isCalendarOpen && (
+                <div className="p-2.5 my-1 rounded-xl bg-white dark:bg-[#202020] border border-gray-200 dark:border-[#2e2e2e] shadow-xs text-xs animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100 dark:border-[#2a2a2a]">
                     <button
-                      key={dateStr}
                       type="button"
-                      onClick={() => onSelectDate?.(dateStr)}
-                      className={`relative p-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer flex flex-col items-center justify-center ${
-                        isToday
-                          ? 'bg-indigo-600 text-white font-bold'
-                          : 'hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-700 dark:text-gray-300'
-                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+                        else { setCalMonth(calMonth - 1); }
+                      }}
+                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-500"
                     >
-                      <span>{d}</span>
-                      {hasNote && (
-                        <span
-                          className={`w-1 h-1 rounded-full ${
-                            isToday ? 'bg-amber-300' : 'bg-indigo-500'
-                          } -mt-0.5`}
-                        />
-                      )}
+                      <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
                     </button>
-                  );
-                })}
-              </div>
-            </div>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-[11px]">
+                      {language === 'ar'
+                        ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'][calMonth]
+                        : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][calMonth]}{' '}
+                      {calYear}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+                        else { setCalMonth(calMonth + 1); }
+                      }}
+                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-500"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                    </button>
+                  </div>
+
+                  {/* Day header row */}
+                  <div className="grid grid-cols-7 gap-1 text-center font-mono text-[10px] text-gray-400 mb-1">
+                    {(language === 'ar' ? ['أ', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
+                      <div key={i}>{d}</div>
+                    ))}
+                  </div>
+
+                  {/* Days grid */}
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                    {Array.from({ length: new Date(calYear, calMonth, 1).getDay() }).map((_, i) => (
+                      <div key={`empty-${i}`} />
+                    ))}
+                    {Array.from({ length: new Date(calYear, calMonth + 1, 0).getDate() }).map((_, i) => {
+                      const d = i + 1;
+                      const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                      const isToday = dateStr === new Date().toISOString().slice(0, 10);
+                      const hasNote = Object.values(pages).some(
+                        (p) => !p.isArchived && (p.dateString === dateStr || (p.title && p.title.includes(dateStr)))
+                      );
+
+                      return (
+                        <button
+                          key={dateStr}
+                          type="button"
+                          onClick={() => onSelectDate?.(dateStr)}
+                          className={`relative p-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer flex flex-col items-center justify-center ${
+                            isToday
+                              ? 'bg-indigo-600 text-white font-bold'
+                              : 'hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <span>{d}</span>
+                          {hasNote && (
+                            <span
+                              className={`w-1 h-1 rounded-full ${
+                                isToday ? 'bg-amber-300' : 'bg-indigo-500'
+                              } -mt-0.5`}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -688,6 +700,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               : theme === 'light'
               ? t('themeLight', language)
               : t('themeDark', language)}
+          </span>
+        </button>
+
+        {/* Settings & In-App Updates */}
+        <button
+          onClick={() => onOpenSettings?.('features')}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          title={t('settingsAndUpdates', language)}
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="w-3.5 h-3.5 text-indigo-500" />
+            <span>{t('settings', language)}</span>
+          </div>
+          <span className="text-[10px] font-mono text-indigo-500 bg-indigo-500/10 px-1.5 py-0.5 rounded">
+            v1.0.1
           </span>
         </button>
 

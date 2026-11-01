@@ -4,12 +4,13 @@ import {
   ChevronRight, Quote, Minus, AlertCircle, Code, Table, Kanban,
   Image as ImageIcon, FileText, Sparkles, ListTree, Workflow
 } from 'lucide-react';
-import { BlockType } from '../types';
+import { BlockType, FeatureFlags } from '../types';
 import { t, Language } from '../i18n';
 
 interface SlashMenuProps {
   isOpen: boolean;
   language?: Language;
+  features?: FeatureFlags;
   onClose: () => void;
   onSelect: (type: BlockType, extra?: any) => void;
   query: string;
@@ -28,6 +29,7 @@ interface MenuItem {
 export const SlashMenu: React.FC<SlashMenuProps> = ({
   isOpen,
   language = 'en',
+  features,
   onClose,
   onSelect,
   query,
@@ -183,11 +185,21 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
     },
   ], [language]);
 
-  const filteredItems = menuItems.filter((item) =>
-    item.label.toLowerCase().includes(query.toLowerCase()) ||
-    item.description.toLowerCase().includes(query.toLowerCase()) ||
-    item.type.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredItems = menuItems
+    .filter((item) => {
+      if (features) {
+        if (!features.math && item.type === 'math') return false;
+        if (!features.diagrams && item.type === 'diagram') return false;
+        if (!features.toc && item.type === 'toc') return false;
+        if (!features.databases && item.type === 'database') return false;
+      }
+      return true;
+    })
+    .filter((item) =>
+      item.label.toLowerCase().includes(query.toLowerCase()) ||
+      item.description.toLowerCase().includes(query.toLowerCase()) ||
+      item.type.toLowerCase().includes(query.toLowerCase())
+    );
 
   useEffect(() => {
     setSelectedIndex(0);

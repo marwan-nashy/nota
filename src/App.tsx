@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { nanoid } from 'nanoid';
-import { Block, BlockType, Database, Page, Workspace, WorkspaceState, AppTheme } from './types';
+import { Block, BlockType, Database, Page, Workspace, WorkspaceState, AppTheme, FeatureFlags, DEFAULT_FEATURE_FLAGS } from './types';
 import { loadWorkspace, saveWorkspace, exportWorkspaceJSON } from './services/storage';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -14,6 +14,7 @@ import { TemplatesModal } from './components/TemplatesModal';
 import { GraphView } from './components/GraphView';
 import { LockModal } from './components/LockModal';
 import { OutlineDrawer } from './components/OutlineDrawer';
+import { SettingsModal } from './components/SettingsModal';
 import { Plus, Link as LinkIcon, Lock, KeyRound } from 'lucide-react';
 import { t, Language } from './i18n';
 
@@ -37,6 +38,8 @@ export function App() {
   const [isGraphViewOpen, setIsGraphViewOpen] = useState(false);
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'features' | 'updates'>('features');
   const [draggedBlockIdx, setDraggedBlockIdx] = useState<number | null>(null);
   const [dragOverBlockIdx, setDragOverBlockIdx] = useState<number | null>(null);
 
@@ -97,7 +100,7 @@ export function App() {
 
   // Calculate backlinks to the current page across the active workspace
   const backlinks = useMemo(() => {
-    if (!activePage || !currentWorkspace?.pages) return [];
+    if ((workspaceState.features && workspaceState.features.backlinks === false) || !activePage || !currentWorkspace?.pages) return [];
     const results: { page: Page; snippet: string }[] = [];
     const pageId = activePage.id;
     const pageTitle = (activePage.title || '').trim().toLowerCase();
@@ -122,7 +125,7 @@ export function App() {
       }
     });
     return results;
-  }, [activePage?.id, activePage?.title, currentWorkspace?.pages, language]);
+  }, [activePage?.id, activePage?.title, currentWorkspace?.pages, language, workspaceState.features?.backlinks]);
 
   // Workspace Operations
   const handleSelectWorkspace = (id: string) => {
@@ -716,6 +719,33 @@ export function App() {
     }
   };
 
+  // Feature flags customization
+  const handleToggleFeature = (key: keyof FeatureFlags) => {
+    setWorkspaceState((prev) => {
+      const curFeatures = prev.features || DEFAULT_FEATURE_FLAGS;
+      const updated = {
+        ...prev,
+        features: {
+          ...curFeatures,
+          [key]: !curFeatures[key],
+        },
+      };
+      saveWorkspace(updated);
+      return updated;
+    });
+  };
+
+  const handleResetFeatures = () => {
+    setWorkspaceState((prev) => {
+      const updated = {
+        ...prev,
+        features: { ...DEFAULT_FEATURE_FLAGS },
+      };
+      saveWorkspace(updated);
+      return updated;
+    });
+  };
+
   return (
     <div
       className={`flex h-screen w-screen overflow-hidden ${
@@ -731,6 +761,7 @@ export function App() {
         isOpen={workspaceState.sidebarOpen}
         theme={workspaceState.theme}
         language={language}
+        features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
         onSelectPage={handleSelectPage}
         onAddPage={handleAddPage}
         onDeletePage={handleDeletePage}
@@ -744,6 +775,10 @@ export function App() {
         onOpenGraphView={() => setIsGraphViewOpen(true)}
         onOpenDailyNote={handleOpenDailyNote}
         onSelectDate={handleSelectDate}
+        onOpenSettings={(tab) => {
+          setSettingsTab(tab || 'features');
+          setIsSettingsOpen(true);
+        }}
         onExportWorkspace={handleExportWorkspace}
         onImportWorkspace={handleImportWorkspace}
         onCloseSidebar={() => setWorkspaceState((prev) => ({ ...prev, sidebarOpen: false }))}
@@ -762,6 +797,7 @@ export function App() {
               page={activePage}
               sidebarOpen={workspaceState.sidebarOpen}
               language={language}
+              features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
               isOutlineOpen={isOutlineOpen}
               onToggleSidebar={() =>
                 setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
@@ -843,7 +879,7 @@ export function App() {
                     ))}
 
                   {/* Linked References / Backlinks Section */}
-                  {backlinks.length > 0 && (
+                  {backlinks.length > 0 && (!workspaceState.features || workspaceState.features.backlinks) && (
                     <div className="mt-10 pt-6 border-t border-gray-200 dark:border-[#2e2e2e]">
                       <div className="flex items-center gap-2 mb-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider select-none">
                         <LinkIcon className="w-3.5 h-3.5 text-indigo-500" />
@@ -916,6 +952,7 @@ export function App() {
       <SlashMenu
         isOpen={slashMenuState.isOpen}
         language={language}
+        features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
         onClose={() => setSlashMenuState((prev) => ({ ...prev, isOpen: false }))}
         onSelect={handleSelectSlashItem}
         query={slashMenuState.query}
@@ -934,6 +971,10 @@ export function App() {
         onToggleTheme={handleToggleTheme}
         onSelectTheme={handleSelectTheme}
         onToggleLanguage={handleToggleLanguage}
+        onOpenSettings={(tab) => {
+          setSettingsTab(tab || 'features');
+          setIsSettingsOpen(true);
+        }}
         onExportWorkspace={handleExportWorkspace}
       />
 
@@ -979,6 +1020,17 @@ export function App() {
           onClose={() => setIsOutlineOpen(false)}
         />
       )}
+
+      {/* Settings & Customization Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        initialTab={settingsTab}
+        features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
+        language={language}
+        onClose={() => setIsSettingsOpen(false)}
+        onToggleFeature={handleToggleFeature}
+        onResetFeatures={handleResetFeatures}
+      />
     </div>
   );
 }

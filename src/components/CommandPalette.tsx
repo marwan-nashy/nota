@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette } from 'lucide-react';
+import { Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette, Settings, RefreshCw } from 'lucide-react';
 import { Page, AppTheme } from '../types';
 import { t, Language } from '../i18n';
 
@@ -14,6 +14,7 @@ interface CommandPaletteProps {
   onToggleTheme: () => void;
   onSelectTheme?: (theme: AppTheme) => void;
   onToggleLanguage?: () => void;
+  onOpenSettings?: (tab?: 'features' | 'updates') => void;
   onExportWorkspace: () => void;
 }
 
@@ -28,6 +29,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onToggleTheme,
   onSelectTheme,
   onToggleLanguage,
+  onOpenSettings,
   onExportWorkspace,
 }) => {
   const [query, setQuery] = useState('');
@@ -134,6 +136,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Download className="w-4 h-4 text-indigo-500" />,
       run: () => {
         onExportWorkspace();
+        onClose();
+      },
+    },
+    {
+      id: 'action-settings',
+      label: t('settingsAndUpdates', language),
+      icon: <Settings className="w-4 h-4 text-violet-400" />,
+      run: () => {
+        onOpenSettings?.('features');
+        onClose();
+      },
+    },
+    {
+      id: 'action-updates',
+      label: t('checkForUpdates', language),
+      icon: <RefreshCw className="w-4 h-4 text-emerald-400" />,
+      run: () => {
+        onOpenSettings?.('updates');
         onClose();
       },
     },
