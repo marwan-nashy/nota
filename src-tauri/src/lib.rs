@@ -4,9 +4,12 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let icon = tauri::image::Image::new(include_bytes!("../icons/icon256.rgba"), 256, 256);
-            if let Some(win) = app.get_webview_window("main") {
-                let _ = win.set_icon(icon);
+            #[cfg(desktop)]
+            {
+                let icon = tauri::image::Image::new(include_bytes!("../icons/icon256.rgba"), 256, 256);
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.set_icon(icon);
+                }
             }
             Ok(())
         })
