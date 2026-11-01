@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nota",
-  "version": "1.0.0",
-  "identifier": "com.nota.desktop",
+  "version": "1.0.1",
+  "identifier": "com.nota.app",
   "build": {
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
@@ -25,12 +25,28 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "shortDescription": "Ultra-lightweight modular workspace (<35MB RAM)",
+    "longDescription": "A blazingly fast, zero-bloat, local-first personal workspace and relational database built with Tauri v2 and React 19.",
+    "category": "Office",
+    "copyright": "Copyright (c) 2026 Marwan Nashy",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37",
+          "libgtk-3-0"
+        ],
+        "section": "editors"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
   }
 }

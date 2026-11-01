@@ -80,7 +80,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, language, onUpdate
       )}
 
       {/* Page Actions Bar (Add Icon / Add Cover) */}
-      <div className={`flex items-center gap-2 mb-2 ${page.cover ? 'px-8 -mt-9' : 'px-8 pt-4'}`}>
+      <div className={`flex items-center gap-2 mb-2 ${page.cover ? 'px-3 sm:px-8 -mt-9' : 'px-3 sm:px-8 pt-4'}`}>
         {/* Page Icon */}
         <div className="relative">
           <button
@@ -132,14 +132,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ page, language, onUpdate
       </div>
 
       {/* Large Page Title */}
-      <div className="px-8 mt-2">
+      <div className="px-3 sm:px-8 mt-2">
         <input
           type="text"
           dir="auto"
           value={page.title}
           onChange={(e) => onUpdatePage({ ...page, title: e.target.value })}
           placeholder={t('pageTitlePlaceholder', language)}
-          className="w-full text-4xl font-extrabold text-[#37352f] dark:text-[#ffffff] bg-transparent border-none focus:outline-none placeholder-gray-300 dark:placeholder-gray-600 tracking-tight"
+          className="w-full text-2xl sm:text-4xl font-extrabold text-[#37352f] dark:text-[#ffffff] bg-transparent border-none focus:outline-none placeholder-gray-300 dark:placeholder-gray-600 tracking-tight"
         />
       </div>
     </div>

@@ -67,6 +67,15 @@ A lightweight, zero-bloat, open-source personal workspace designed specifically 
 
 ---
 
+### 6. Cross-Platform & Mobile Ready
+- **Windows**: Single portable `.exe` (4.6 MB) with 0ms startup time.
+- **Linux**: Native `.deb` packages and universal `.AppImage` binaries built via GitHub Actions.
+- **Mobile (iOS & Android PWA)**: Installable directly to phone home screen with full offline storage and touch drawer navigation.
+- **Android APK**: Automated CI/CD build workflow via Tauri v2 Android target.
+- **Web App**: Client-side single-page application hosted on GitHub Pages.
+
+---
+
 ## Development & Build Instructions
 
 ### Run in Development Mode
@@ -74,11 +83,31 @@ A lightweight, zero-bloat, open-source personal workspace designed specifically 
 npm run tauri dev
 ```
 
-### Build Production Standalone Executable
+### Build Web App & PWA
+```bash
+npm run build
+```
+
+### Build Windows Standalone Executable
 ```bash
 npm run tauri build --no-bundle
 ```
-The compiled binary will be placed directly in `Nota.exe`.
+
+### Build Linux Packages (.deb / .AppImage)
+On Ubuntu/Debian:
+```bash
+sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libssl-dev libgtk-3-dev
+npm run build
+npx tauri build
+```
+*(Or let GitHub Actions compile them automatically via `.github/workflows/build-linux.yml`)*
+
+### Build Android APK
+```bash
+npx tauri android init
+npx tauri android build --apk
+```
+*(Or let GitHub Actions compile them automatically via `.github/workflows/build-android.yml`)*
 
 ---
 

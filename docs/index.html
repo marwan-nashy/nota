@@ -460,47 +460,69 @@
           Single-file portable binaries. No installers, no background updaters, no admin rights required.
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-4xl mx-auto mb-10">
-          <!-- Download Card 0: Web App -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left max-w-5xl mx-auto mb-10">
+          <!-- Download Card 0: Web & Mobile PWA -->
           <a href="./app/"
-             class="p-5 rounded-xl border border-indigo-500/50 bg-indigo-950/20 hover:border-indigo-400 hover:bg-indigo-950/40 transition-all group flex items-start gap-4 shadow-lg shadow-indigo-950/50">
-            <div class="p-3 rounded-lg bg-indigo-500/20 text-indigo-300 group-hover:scale-110 transition-transform">
-              <i data-lucide="globe" class="w-6 h-6"></i>
-            </div>
+             class="p-5 rounded-xl border border-indigo-500/50 bg-indigo-950/20 hover:border-indigo-400 hover:bg-indigo-950/40 transition-all group flex flex-col justify-between shadow-lg shadow-indigo-950/50">
             <div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-white text-sm">Web App</span>
-                <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Instant</span>
+              <div class="flex items-center justify-between mb-3">
+                <div class="p-2.5 rounded-lg bg-indigo-500/20 text-indigo-300 group-hover:scale-110 transition-transform">
+                  <i data-lucide="smartphone" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PWA & Web</span>
               </div>
-              <div class="text-xs text-gray-400 mt-0.5">Run directly in any browser (0 download)</div>
-              <div class="text-[11px] text-indigo-400 font-mono mt-2">Launch in Browser →</div>
+              <div class="font-bold text-white text-sm">Web & Mobile PWA</div>
+              <div class="text-xs text-gray-400 mt-1">iOS & Android home-screen app. Zero install.</div>
             </div>
+            <div class="text-[11px] text-indigo-400 font-mono mt-4 flex items-center gap-1">Launch / Install →</div>
           </a>
 
-          <!-- Download Card 1 -->
+          <!-- Download Card 1: Windows -->
           <a href="https://github.com/marwan-nashy/nota/releases/download/v1.0.1/Nota.exe"
-             class="p-5 rounded-xl border border-dark-border bg-dark-surface hover:border-indigo-500 transition-all group flex items-start gap-4">
-            <div class="p-3 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
-              <i data-lucide="play" class="w-6 h-6"></i>
-            </div>
+             class="p-5 rounded-xl border border-dark-border bg-dark-surface hover:border-indigo-500 transition-all group flex flex-col justify-between">
             <div>
-              <div class="font-bold text-white text-sm">Nota.exe</div>
-              <div class="text-xs text-gray-400 mt-0.5">Standalone Portable Binary (4.6 MB)</div>
-              <div class="text-[11px] text-indigo-400 font-mono mt-2">Direct 1-Click Launch →</div>
+              <div class="flex items-center justify-between mb-3">
+                <div class="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
+                  <i data-lucide="monitor" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">Windows</span>
+              </div>
+              <div class="font-bold text-white text-sm">Nota.exe (Windows)</div>
+              <div class="text-xs text-gray-400 mt-1">Standalone portable binary (4.6 MB)</div>
             </div>
+            <div class="text-[11px] text-indigo-400 font-mono mt-4 flex items-center gap-1">Direct Download →</div>
           </a>
 
-          <!-- Download Card 2 -->
-          <a href="https://github.com/marwan-nashy/nota/releases/download/v1.0.1/Nota-v1.0.1-Windows-x64-Portable.zip"
-             class="p-5 rounded-xl border border-dark-border bg-dark-surface hover:border-indigo-500 transition-all group flex items-start gap-4">
-            <div class="p-3 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-              <i data-lucide="archive" class="w-6 h-6"></i>
-            </div>
+          <!-- Download Card 2: Linux -->
+          <a href="https://github.com/marwan-nashy/nota/actions/workflows/build-linux.yml" target="_blank" rel="noopener noreferrer"
+             class="p-5 rounded-xl border border-dark-border bg-dark-surface hover:border-emerald-500 transition-all group flex flex-col justify-between">
             <div>
-              <div class="font-bold text-white text-sm">Portable .ZIP Package</div>
-              <div class="text-xs text-gray-400 mt-0.5">Executable + Icons + License (1.8 MB)</div>
-              <div class="text-[11px] text-purple-400 font-mono mt-2">Compressed Archive →</div>
+              <div class="flex items-center justify-between mb-3">
+                <div class="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+                  <i data-lucide="terminal" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Linux</span>
+              </div>
+              <div class="font-bold text-white text-sm">Linux (.deb & AppImage)</div>
+              <div class="text-xs text-gray-400 mt-1">Ubuntu, Debian, Fedora, Arch Linux</div>
             </div>
+            <div class="text-[11px] text-emerald-400 font-mono mt-4 flex items-center gap-1">CI/CD Build Pipeline →</div>
+          </a>
+
+          <!-- Download Card 3: Android -->
+          <a href="https://github.com/marwan-nashy/nota/actions/workflows/build-android.yml" target="_blank" rel="noopener noreferrer"
+             class="p-5 rounded-xl border border-dark-border bg-dark-surface hover:border-purple-500 transition-all group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <div class="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                  <i data-lucide="tablet" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">Android</span>
+              </div>
+              <div class="font-bold text-white text-sm">Android APK Build</div>
+              <div class="text-xs text-gray-400 mt-1">Automated ARM64/ARMv7 APK pipeline</div>
+            </div>
+            <div class="text-[11px] text-purple-400 font-mono mt-4 flex items-center gap-1">View APK Action →</div>
           </a>
         </div>
 
@@ -529,6 +551,12 @@ BF2A00D4355BDA825D94605D8CA55FC3F2082EB4B4519C2365C5A3275EFD666C  Nota-v1.0.1-Wi
           <h3 class="font-bold text-sm text-white mb-2">Can I try Nota directly in the browser without downloading?</h3>
           <p class="text-xs text-gray-400 leading-relaxed">
             Yes! Nota runs 100% client-side in any modern web browser without needing to download or install any software. Simply click <b><a href="./app/" class="text-indigo-400 underline hover:text-indigo-300">Try Web App</a></b> to explore your personal workspace, databases, Kanban boards, and templates immediately. All changes are stored locally in your browser and can be exported as Markdown, HTML, or JSON at any time.
+          </p>
+        </div>
+        <div class="p-5 rounded-xl border border-dark-border bg-dark-surface">
+          <h3 class="font-bold text-sm text-white mb-2">Can I use Nota on Linux and Mobile (Android & iOS)?</h3>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Yes! For <b>Linux</b>, automated GitHub Actions pipelines produce native Debian packages (<code>.deb</code>) and universal standalone binaries (<code>.AppImage</code>). For <b>Mobile</b>, you can open the web app on any smartphone browser and select <b>"Add to Home Screen"</b> to install Nota as a standalone Progressive Web App (PWA) with full offline persistence and a responsive slide-out drawer layout. An automated Android APK pipeline is also available in our repository.
           </p>
         </div>
         <div class="p-5 rounded-xl border border-dark-border bg-dark-surface">

@@ -76,16 +76,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="h-11 border-b border-[#e9e9e7] dark:border-[#2e2e2e] bg-white/80 dark:bg-[#191919]/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-30 select-none">
       {/* Left: Sidebar Toggle & Breadcrumb */}
-      <div className="flex items-center gap-2">
-        {!sidebarOpen && (
-          <button
-            onClick={onToggleSidebar}
-            className="p-1 rounded-md text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer"
-            title={t('openSidebar', language)}
-          >
-            <Menu className="w-4 h-4" />
-          </button>
-        )}
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          onClick={onToggleSidebar}
+          className={`p-1 rounded-md text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer shrink-0 ${
+            !sidebarOpen ? 'block' : 'block md:hidden'
+          }`}
+          title={t('openSidebar', language)}
+        >
+          <Menu className="w-4 h-4" />
+        </button>
 
         <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
           <span>{t('workspace', language)}</span>

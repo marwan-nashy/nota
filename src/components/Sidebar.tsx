@@ -139,7 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
       <div key={page.id} className="relative group/page">
         <div
-          onClick={() => onSelectPage(page.id)}
+          onClick={() => {
+            onSelectPage(page.id);
+            if (window.innerWidth < 768) onCloseSidebar();
+          }}
           style={{ paddingInlineStart: `${depth * 14 + 8}px` }}
           className={`flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer transition-colors ${
             activePageId === page.id
@@ -203,26 +206,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 h-screen bg-[#fbfbfa] dark:bg-[#202020] border-r rtl:border-l rtl:border-r-0 border-[#e9e9e7] dark:border-[#2e2e2e] flex flex-col justify-between shrink-0 select-none text-xs text-[#37352f] dark:text-[#ebebeb] z-40 transition-colors">
-      {/* Top Section */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Workspace Switcher Header */}
-        <div className="relative p-2 border-b border-[#e9e9e7] dark:border-[#2e2e2e]">
-          <button
-            onClick={() => setIsWorkspaceMenuOpen(!isWorkspaceMenuOpen)}
-            className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors group text-start cursor-pointer"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-base select-none">{currentWorkspace?.icon || '🚀'}</span>
-              <span className="font-semibold text-sm truncate max-w-[130px] text-[#37352f] dark:text-[#ebebeb]">
-                {currentWorkspace?.name || t('workspace', language)}
-              </span>
-            </div>
+    <>
+      {/* Mobile Backdrop */}
+      <div
+        onClick={onCloseSidebar}
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 md:hidden transition-opacity"
+      />
 
-            <div className="flex items-center gap-1 shrink-0">
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-transform ${isWorkspaceMenuOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </button>
+      <aside className="fixed md:static inset-y-0 start-0 z-50 w-72 md:w-64 h-screen bg-[#fbfbfa] dark:bg-[#202020] border-r rtl:border-l rtl:border-r-0 border-[#e9e9e7] dark:border-[#2e2e2e] flex flex-col justify-between shrink-0 select-none text-xs text-[#37352f] dark:text-[#ebebeb] shadow-2xl md:shadow-none transition-all duration-200">
+        {/* Top Section */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Workspace Switcher Header */}
+          <div className="relative p-2 border-b border-[#e9e9e7] dark:border-[#2e2e2e]">
+            <button
+              onClick={() => setIsWorkspaceMenuOpen(!isWorkspaceMenuOpen)}
+              className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors group text-start cursor-pointer"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base select-none">{currentWorkspace?.icon || '🚀'}</span>
+                <span className="font-semibold text-sm truncate max-w-[130px] text-[#37352f] dark:text-[#ebebeb]">
+                  {currentWorkspace?.name || t('workspace', language)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-transform ${isWorkspaceMenuOpen ? 'rotate-180' : ''}`} />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCloseSidebar();
+                  }}
+                  className="md:hidden p-1 rounded-md hover:bg-gray-200 dark:hover:bg-[#333] text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+                  title="Close sidebar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </button>
 
           {/* Workspaces Popover Menu - Cleanly bounds within sidebar */}
           {isWorkspaceMenuOpen && (
@@ -544,5 +565,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </aside>
+  </>
   );
 };

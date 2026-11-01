@@ -582,7 +582,7 @@ export function App() {
             />
 
             {/* Scrollable Document Canvas */}
-            <div className="flex-1 overflow-y-auto px-4 pb-32">
+            <div className="flex-1 overflow-y-auto px-2 sm:px-4 pb-32">
               <div
                 className={`mx-auto transition-all duration-150 ${
                   activePage.fullWidth ? 'max-w-6xl' : 'max-w-3xl'
@@ -594,7 +594,7 @@ export function App() {
                 <PageHeader page={activePage} language={language} onUpdatePage={handleUpdatePage} />
 
                 {/* Blocks List */}
-                <div className="px-8 space-y-0.5">
+                <div className="px-2 sm:px-8 space-y-0.5">
                   {activePage.blocks.map((block, idx) => (
                     <BlockItem
                       key={block.id}

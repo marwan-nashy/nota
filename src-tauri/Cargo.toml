@@ -1,7 +1,7 @@
 [package]
 name = "nota"
-version = "1.0.0"
-description = "Nota Desktop App"
+version = "1.0.1"
+description = "Nota Desktop and Mobile App"
 authors = ["Marwan <marwannashy11@gmail.com>"]
 license = "GPL-3.0-or-later"
 edition = "2021"
