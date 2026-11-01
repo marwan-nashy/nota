@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Menu, Star, MoreHorizontal, Download, Trash2, Maximize2, Minimize2, 
-  Type, Check, FileText, Printer, Code, Share2, Lock, Unlock, ListTree
+  Type, Check, FileText, Printer, Code, Share2, Lock, Unlock, ListTree,
+  Search, History
 } from 'lucide-react';
 import { Page, FeatureFlags } from '../types';
 import { exportPageMarkdown } from '../services/storage';
@@ -13,9 +14,13 @@ interface NavbarProps {
   language: Language;
   features?: FeatureFlags;
   isOutlineOpen?: boolean;
+  zenMode?: boolean;
   onToggleSidebar: () => void;
   onToggleOutline?: () => void;
   onOpenLockModal?: () => void;
+  onOpenFindReplace?: () => void;
+  onOpenHistory?: () => void;
+  onToggleZenMode?: () => void;
   onUpdatePage: (updated: Page) => void;
   onDeletePage: (id: string) => void;
 }
@@ -26,9 +31,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   language,
   features,
   isOutlineOpen,
+  zenMode,
   onToggleSidebar,
   onToggleOutline,
   onOpenLockModal,
+  onOpenFindReplace,
+  onOpenHistory,
+  onToggleZenMode,
   onUpdatePage,
   onDeletePage,
 }) => {
@@ -107,6 +116,52 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
+        {/* Live Word & Reading Counter */}
+        {(!features || features.wordCounter !== false) && (
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-gray-400 select-none bg-gray-100/60 dark:bg-[#252525]/60 mr-1 rtl:mr-0 rtl:ml-1">
+            <span>{wordCount} {t('words', language)}</span>
+            <span>·</span>
+            <span>~{Math.max(1, Math.ceil(wordCount / 200))} {t('minRead', language)}</span>
+          </div>
+        )}
+
+        {/* In-Page Find & Replace */}
+        {(!features || features.findReplace !== false) && (
+          <button
+            onClick={onOpenFindReplace}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer"
+            title={t('findInPage', language)}
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Page Revision History */}
+        {(!features || features.snapshots !== false) && (
+          <button
+            onClick={onOpenHistory}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] transition-colors cursor-pointer"
+            title={t('versionHistory', language)}
+          >
+            <History className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Focus / Zen Mode */}
+        {(!features || features.zenMode !== false) && (
+          <button
+            onClick={onToggleZenMode}
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              zenMode
+                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#efefee] dark:hover:bg-[#2c2c2c]'
+            }`}
+            title={zenMode ? t('exitZenMode', language) : t('zenMode', language)}
+          >
+            {zenMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+        )}
+
         {/* Document Outline Toggle */}
         {(!features || features.toc) && (
           <button

@@ -2,12 +2,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import katex from 'katex';
 import mermaid from 'mermaid';
 import { 
-  GripVertical, Plus, ChevronRight, Check, Copy, CheckCheck, Trash2, 
+  GripVertical, Plus, ChevronRight, ChevronDown, Check, Copy, CheckCheck, Trash2, 
   ArrowRightLeft, AlertCircle, Sparkles, Image as ImageIcon, Link as LinkIcon, 
-  ExternalLink, ListTree, ArrowUp, ArrowDown, Workflow
+  ExternalLink, ListTree, ArrowUp, ArrowDown, Workflow, Mic
 } from 'lucide-react';
 import { Block, BlockType, Database } from '../types';
 import { DatabaseView } from './DatabaseView';
+import { VoiceMemoBlock } from './VoiceMemoBlock';
 import { t, Language } from '../i18n';
 
 try {
@@ -327,8 +328,45 @@ export const BlockItem: React.FC<BlockItemProps> = ({
                 {t('embed', language)}
               </button>
             </div>
+            <div className="mt-2 text-[11px] text-gray-400 flex items-center justify-center gap-1.5">
+              <span>or</span>
+              <label className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer font-medium">
+                Upload image from device
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        onUpdateBlock({ ...block, content: reader.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Rendering for Audio / Voice Memo Block
+  if (block.type === 'audio') {
+    return (
+      <div className="relative group/block my-2">
+        <VoiceMemoBlock
+          id={block.id}
+          audioUrl={block.audioUrl || block.content}
+          audioDuration={block.audioDuration}
+          language={language}
+          onUpdate={(url, dur) => onUpdateBlock({ ...block, audioUrl: url, audioDuration: dur, content: url })}
+          onDelete={() => onDeleteBlock(block.id)}
+        />
       </div>
     );
   }
@@ -708,26 +746,51 @@ export const BlockItem: React.FC<BlockItemProps> = ({
             })()}
           </div>
         ) : (
-          <div
-            ref={contentRef}
-            dir="auto"
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onFocus={() => onFocusBlock(block.id)}
-            className={`focus:outline-none min-h-[24px] ${
-              block.type === 'heading1'
-                ? 'text-3xl font-bold tracking-tight mt-4 mb-2 text-[#37352f] dark:text-[#ffffff]'
-                : block.type === 'heading2'
-                ? 'text-2xl font-bold tracking-tight mt-3 mb-1.5 text-[#37352f] dark:text-[#ffffff]'
-                : block.type === 'heading3'
-                ? 'text-xl font-semibold tracking-tight mt-2 mb-1 text-[#37352f] dark:text-[#ffffff]'
-                : block.type === 'todo' && block.checked
-                ? 'line-through text-gray-400 dark:text-gray-500'
-                : 'text-sm leading-relaxed text-[#37352f] dark:text-[#ebebeb]'
-            }`}
-          />
+          <div className="relative flex-1 group/heading">
+            {(block.type === 'heading1' || block.type === 'heading2' || block.type === 'heading3') && (
+              <button
+                onClick={() => onUpdateBlock({ ...block, collapsed: !block.collapsed })}
+                title={block.collapsed ? t('expandHeading', language) : t('collapseHeading', language)}
+                className={`absolute -left-6 rtl:-left-auto rtl:-right-6 top-1.5 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-[#333] transition-all cursor-pointer ${
+                  block.collapsed ? 'opacity-100 text-indigo-500' : 'opacity-0 group-hover/heading:opacity-100 text-gray-400'
+                }`}
+              >
+                {block.collapsed ? (
+                  <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            )}
+            <div
+              ref={contentRef}
+              dir="auto"
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleInput}
+              onKeyDown={handleKeyDown}
+              onFocus={() => onFocusBlock(block.id)}
+              className={`focus:outline-none min-h-[24px] ${
+                block.type === 'heading1'
+                  ? 'text-3xl font-bold tracking-tight mt-4 mb-2 text-[#37352f] dark:text-[#ffffff]'
+                  : block.type === 'heading2'
+                  ? 'text-2xl font-bold tracking-tight mt-3 mb-1.5 text-[#37352f] dark:text-[#ffffff]'
+                  : block.type === 'heading3'
+                  ? 'text-xl font-semibold tracking-tight mt-2 mb-1 text-[#37352f] dark:text-[#ffffff]'
+                  : block.type === 'todo' && block.checked
+                  ? 'line-through text-gray-400 dark:text-gray-500'
+                  : 'text-sm leading-relaxed text-[#37352f] dark:text-[#ebebeb]'
+              }`}
+            />
+            {block.collapsed && (block.type === 'heading1' || block.type === 'heading2' || block.type === 'heading3') && (
+              <span
+                onClick={() => onUpdateBlock({ ...block, collapsed: false })}
+                className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 cursor-pointer select-none"
+              >
+                ... {t('expandHeading', language)}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>

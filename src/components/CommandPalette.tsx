@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette, Settings, RefreshCw } from 'lucide-react';
+import { 
+  Search, FileText, Plus, Moon, Sun, Download, X, Languages, Palette, 
+  Settings, RefreshCw, Hash, Maximize2, History, ArrowRightLeft, Upload 
+} from 'lucide-react';
 import { Page, AppTheme } from '../types';
 import { t, Language } from '../i18n';
 
@@ -15,6 +18,12 @@ interface CommandPaletteProps {
   onSelectTheme?: (theme: AppTheme) => void;
   onToggleLanguage?: () => void;
   onOpenSettings?: (tab?: 'features' | 'updates') => void;
+  onOpenFindReplace?: () => void;
+  onOpenTags?: () => void;
+  onOpenHistory?: () => void;
+  onToggleZenMode?: () => void;
+  onOpenImport?: () => void;
+  onOpenSync?: () => void;
   onExportWorkspace: () => void;
 }
 
@@ -30,6 +39,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSelectTheme,
   onToggleLanguage,
   onOpenSettings,
+  onOpenFindReplace,
+  onOpenTags,
+  onOpenHistory,
+  onToggleZenMode,
+  onOpenImport,
+  onOpenSync,
   onExportWorkspace,
 }) => {
   const [query, setQuery] = useState('');
@@ -154,6 +169,60 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <RefreshCw className="w-4 h-4 text-emerald-400" />,
       run: () => {
         onOpenSettings?.('updates');
+        onClose();
+      },
+    },
+    {
+      id: 'action-find-replace',
+      label: t('findInPage', language),
+      icon: <Search className="w-4 h-4 text-sky-400" />,
+      run: () => {
+        onOpenFindReplace?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-tags',
+      label: t('tagExplorer', language),
+      icon: <Hash className="w-4 h-4 text-violet-400" />,
+      run: () => {
+        onOpenTags?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-history',
+      label: t('versionHistory', language),
+      icon: <History className="w-4 h-4 text-amber-400" />,
+      run: () => {
+        onOpenHistory?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-zen',
+      label: t('zenMode', language),
+      icon: <Maximize2 className="w-4 h-4 text-purple-400" />,
+      run: () => {
+        onToggleZenMode?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-import',
+      label: t('importMarkdown', language),
+      icon: <Upload className="w-4 h-4 text-blue-400" />,
+      run: () => {
+        onOpenImport?.();
+        onClose();
+      },
+    },
+    {
+      id: 'action-sync',
+      label: t('p2pSync', language),
+      icon: <ArrowRightLeft className="w-4 h-4 text-emerald-400" />,
+      run: () => {
+        onOpenSync?.();
         onClose();
       },
     },

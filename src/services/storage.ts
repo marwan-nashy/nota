@@ -1,4 +1,5 @@
-import { Page, Database, Workspace, WorkspaceState, DEFAULT_FEATURE_FLAGS } from '../types';
+import { Page, Database, Workspace, WorkspaceState, DEFAULT_FEATURE_FLAGS, PageSnapshot, Block } from '../types';
+import { nanoid } from 'nanoid';
 
 const STORAGE_KEY = 'nota_workspace_v2';
 const LEGACY_STORAGE_KEY_V2 = 'better_notion_workspace_v2';
@@ -396,4 +397,133 @@ function stripHtml(html: string): string {
   const tmp = document.createElement('DIV');
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || '';
+}
+
+// Local Snapshots / Page Revision History
+const SNAPSHOTS_KEY = 'nota_snapshots_v1';
+
+export function getPageSnapshots(pageId: string): PageSnapshot[] {
+  try {
+    const raw = localStorage.getItem(SNAPSHOTS_KEY);
+    if (!raw) return [];
+    const all: Record<string, PageSnapshot[]> = JSON.parse(raw);
+    return all[pageId] || [];
+  } catch {
+    return [];
+  }
+}
+
+export function savePageSnapshot(snapshot: PageSnapshot): void {
+  try {
+    const raw = localStorage.getItem(SNAPSHOTS_KEY);
+    const all: Record<string, PageSnapshot[]> = raw ? JSON.parse(raw) : {};
+    const pageSnapshots = all[snapshot.pageId] || [];
+    // Keep max 20 snapshots per page to keep storage minimal (<50KB)
+    const updated = [snapshot, ...pageSnapshots.slice(0, 19)];
+    all[snapshot.pageId] = updated;
+    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn('Failed to save snapshot', e);
+  }
+}
+
+// Markdown & Obsidian note parser into Nota blocks
+export function parseMarkdownToBlocks(markdown: string, defaultTitle: string = 'Imported Note'): { title: string; blocks: Block[] } {
+  const lines = markdown.split(/\r?\n/);
+  const blocks: Block[] = [];
+  let detectedTitle = defaultTitle;
+  let inCodeFence = false;
+  let codeLang = '';
+  let codeBuffer: string[] = [];
+  let inMathFence = false;
+  let mathBuffer: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Code Fence handling
+    if (line.trim().startsWith('```')) {
+      if (inCodeFence) {
+        blocks.push({
+          id: 'b-' + nanoid(6),
+          type: codeLang === 'mermaid' ? 'diagram' : 'code',
+          language: codeLang,
+          content: codeBuffer.join('\n'),
+        });
+        inCodeFence = false;
+        codeBuffer = [];
+        codeLang = '';
+        continue;
+      } else {
+        inCodeFence = true;
+        codeLang = line.trim().slice(3).trim();
+        codeBuffer = [];
+        continue;
+      }
+    }
+
+    if (inCodeFence) {
+      codeBuffer.push(line);
+      continue;
+    }
+
+    // Math Fence handling
+    if (line.trim() === '$$') {
+      if (inMathFence) {
+        blocks.push({
+          id: 'b-' + nanoid(6),
+          type: 'math',
+          content: mathBuffer.join('\n'),
+        });
+        inMathFence = false;
+        mathBuffer = [];
+        continue;
+      } else {
+        inMathFence = true;
+        mathBuffer = [];
+        continue;
+      }
+    }
+
+    if (inMathFence) {
+      mathBuffer.push(line);
+      continue;
+    }
+
+    // Headings
+    if (line.startsWith('# ')) {
+      const headingText = line.slice(2).trim();
+      if (blocks.length === 0 && detectedTitle === defaultTitle) {
+        detectedTitle = headingText;
+      } else {
+        blocks.push({ id: 'b-' + nanoid(6), type: 'heading1', content: headingText });
+      }
+    } else if (line.startsWith('## ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'heading2', content: line.slice(3).trim() });
+    } else if (line.startsWith('### ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'heading3', content: line.slice(4).trim() });
+    } else if (line.startsWith('- [ ] ') || line.startsWith('* [ ] ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'todo', checked: false, content: line.slice(6).trim() });
+    } else if (line.startsWith('- [x] ') || line.startsWith('* [x] ') || line.startsWith('- [X] ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'todo', checked: true, content: line.slice(6).trim() });
+    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'bullet', content: line.slice(2).trim() });
+    } else if (/^\d+\.\s/.test(line)) {
+      const content = line.replace(/^\d+\.\s/, '').trim();
+      blocks.push({ id: 'b-' + nanoid(6), type: 'number', content });
+    } else if (line.startsWith('> ')) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'quote', content: line.slice(2).trim() });
+    } else if (line.trim() === '---' || line.trim() === '***') {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'divider', content: '' });
+    } else if (line.trim().length > 0) {
+      blocks.push({ id: 'b-' + nanoid(6), type: 'paragraph', content: line });
+    }
+  }
+
+  // Fallback block if empty
+  if (blocks.length === 0) {
+    blocks.push({ id: 'b-' + nanoid(6), type: 'paragraph', content: '' });
+  }
+
+  return { title: detectedTitle, blocks };
 }

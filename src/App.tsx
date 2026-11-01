@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { nanoid } from 'nanoid';
-import { Block, BlockType, Database, Page, Workspace, WorkspaceState, AppTheme, FeatureFlags, DEFAULT_FEATURE_FLAGS } from './types';
+import { Block, BlockType, Database, Page, Workspace, WorkspaceState, AppTheme, FeatureFlags, DEFAULT_FEATURE_FLAGS, PageSnapshot } from './types';
 import { loadWorkspace, saveWorkspace, exportWorkspaceJSON } from './services/storage';
+import { storeMediaItem } from './services/mediaStore';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { PageHeader } from './components/PageHeader';
@@ -15,7 +16,13 @@ import { GraphView } from './components/GraphView';
 import { LockModal } from './components/LockModal';
 import { OutlineDrawer } from './components/OutlineDrawer';
 import { SettingsModal } from './components/SettingsModal';
-import { Plus, Link as LinkIcon, Lock, KeyRound } from 'lucide-react';
+import { FindReplaceBar } from './components/FindReplaceBar';
+import { TabsBar } from './components/TabsBar';
+import { TagExplorerModal } from './components/TagExplorerModal';
+import { HistoryModal } from './components/HistoryModal';
+import { ImportModal } from './components/ImportModal';
+import { P2PSyncModal } from './components/P2PSyncModal';
+import { Plus, Link as LinkIcon, Lock, KeyRound, Minimize2 } from 'lucide-react';
 import { t, Language } from './i18n';
 
 export function App() {
@@ -40,6 +47,17 @@ export function App() {
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'features' | 'updates'>('features');
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
+  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isSyncOpen, setIsSyncOpen] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
+  const [openTabs, setOpenTabs] = useState<string[]>(() => {
+    const ws = loadWorkspace();
+    const curWs = ws.workspaces[ws.activeWorkspaceId] || Object.values(ws.workspaces)[0];
+    return curWs ? [curWs.activePageId] : [];
+  });
   const [draggedBlockIdx, setDraggedBlockIdx] = useState<number | null>(null);
   const [dragOverBlockIdx, setDragOverBlockIdx] = useState<number | null>(null);
 
@@ -73,7 +91,7 @@ export function App() {
     return () => clearTimeout(handler);
   }, [workspaceState]);
 
-  // Global keyboard shortcuts (Ctrl+K, Ctrl+P, Ctrl+\)
+  // Global keyboard shortcuts (Ctrl+K, Ctrl+P, Ctrl+\, Ctrl+F, F11, Esc)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'p')) {
@@ -82,11 +100,20 @@ export function App() {
       } else if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
         e.preventDefault();
         setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        setIsFindReplaceOpen((prev) => !prev);
+      } else if (e.key === 'F11') {
+        e.preventDefault();
+        setZenMode((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        if (isFindReplaceOpen) setIsFindReplaceOpen(false);
+        if (zenMode) setZenMode(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isFindReplaceOpen, zenMode]);
 
   const currentWorkspace =
     workspaceState.workspaces[workspaceState.activeWorkspaceId] ||
@@ -240,6 +267,17 @@ export function App() {
   // Page Operations
   const handleSelectPage = (id: string) => {
     updateCurrentWorkspace((ws) => ({ ...ws, activePageId: id }));
+    setOpenTabs((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
+
+  const handleCloseTab = (id: string) => {
+    setOpenTabs((prev) => {
+      const nextTabs = prev.filter((tabId) => tabId !== id);
+      if (currentWorkspace?.activePageId === id && nextTabs.length > 0) {
+        handleSelectPage(nextTabs[nextTabs.length - 1]);
+      }
+      return nextTabs;
+    });
   };
 
   const handleAddPage = (parentId: string | null = null) => {
@@ -271,6 +309,7 @@ export function App() {
       pages: { ...ws.pages, [newId]: newPage },
       activePageId: newId,
     }));
+    setOpenTabs((prev) => [...prev, newId]);
   };
 
   const handleUpdatePage = (updated: Page) => {
@@ -422,6 +461,42 @@ export function App() {
         activePageId: ws.activePageId === id ? nextActiveId : ws.activePageId,
       };
     });
+    setOpenTabs((prev) => prev.filter((tabId) => tabId !== id));
+  };
+
+  const handleImportPages = (newPages: Page[]) => {
+    updateCurrentWorkspace((ws) => {
+      const pagesCopy = { ...ws.pages };
+      newPages.forEach((p) => {
+        pagesCopy[p.id] = p;
+      });
+      return {
+        ...ws,
+        pages: pagesCopy,
+        activePageId: newPages[0]?.id || ws.activePageId,
+      };
+    });
+    setOpenTabs((prev) => [...prev, ...newPages.map((p) => p.id)]);
+  };
+
+  const handleRestoreSnapshot = (snapshot: PageSnapshot) => {
+    if (!activePage) return;
+    const restoredPage: Page = {
+      ...activePage,
+      title: snapshot.title,
+      blocks: JSON.parse(JSON.stringify(snapshot.blocks)),
+      updatedAt: Date.now(),
+    };
+    handleUpdatePage(restoredPage);
+  };
+
+  const handleUpdateBlocks = (newBlocks: Block[]) => {
+    if (!activePage) return;
+    handleUpdatePage({
+      ...activePage,
+      blocks: newBlocks,
+      updatedAt: Date.now(),
+    });
   };
 
   const handleRestorePage = (id: string) => {
@@ -550,6 +625,109 @@ export function App() {
     const idx = activePage.blocks.findIndex((b) => b.id === currentId);
     if (idx < activePage.blocks.length - 1) {
       setFocusedBlockId(activePage.blocks[idx + 1].id);
+    }
+  };
+
+  // Collapsible Headings: Compute hidden blocks dynamically
+  const hiddenBlockIds = useMemo(() => {
+    const hidden = new Set<string>();
+    if (!activePage?.blocks) return hidden;
+
+    let collapsingLevel = 0; // 0 = none, 1 = H1, 2 = H2, 3 = H3
+
+    for (const b of activePage.blocks) {
+      if (b.type === 'heading1') {
+        collapsingLevel = b.collapsed ? 1 : 0;
+        continue;
+      } else if (b.type === 'heading2') {
+        if (collapsingLevel === 1) {
+          hidden.add(b.id);
+          continue;
+        }
+        collapsingLevel = b.collapsed ? 2 : 0;
+        continue;
+      } else if (b.type === 'heading3') {
+        if (collapsingLevel === 1 || collapsingLevel === 2) {
+          hidden.add(b.id);
+          continue;
+        }
+        collapsingLevel = b.collapsed ? 3 : 0;
+        continue;
+      }
+
+      if (collapsingLevel > 0) {
+        hidden.add(b.id);
+      }
+    }
+
+    return hidden;
+  }, [activePage?.blocks]);
+
+  // Image Paste & Drop Handlers (Local-First IndexedDB)
+  const handleCanvasPaste = async (e: React.ClipboardEvent) => {
+    if (!activePage) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const dataUrl = reader.result as string;
+            const mediaId = 'img-' + nanoid(8);
+            await storeMediaItem({
+              id: mediaId,
+              type: 'image',
+              dataUrl,
+              name: file.name || `pasted-${Date.now()}.png`,
+              size: file.size,
+              mimeType: file.type,
+              createdAt: Date.now(),
+            });
+            const newBlock: Block = {
+              id: 'b-' + nanoid(6),
+              type: 'image',
+              content: dataUrl,
+            };
+            handleUpdateBlocks([...activePage.blocks, newBlock]);
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleCanvasDrop = (e: React.DragEvent) => {
+    if (!activePage) return;
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+      e.preventDefault();
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const dataUrl = reader.result as string;
+        const mediaId = 'img-' + nanoid(8);
+        await storeMediaItem({
+          id: mediaId,
+          type: 'image',
+          dataUrl,
+          name: file.name,
+          size: file.size,
+          mimeType: file.type,
+          createdAt: Date.now(),
+        });
+        const newBlock: Block = {
+          id: 'b-' + nanoid(6),
+          type: 'image',
+          content: dataUrl,
+        };
+        handleUpdateBlocks([...activePage.blocks, newBlock]);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -758,7 +936,7 @@ export function App() {
         activeWorkspaceId={workspaceState.activeWorkspaceId}
         pages={currentWorkspace?.pages || {}}
         activePageId={currentWorkspace?.activePageId || ''}
-        isOpen={workspaceState.sidebarOpen}
+        isOpen={zenMode ? false : workspaceState.sidebarOpen}
         theme={workspaceState.theme}
         language={language}
         features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
@@ -775,6 +953,9 @@ export function App() {
         onOpenGraphView={() => setIsGraphViewOpen(true)}
         onOpenDailyNote={handleOpenDailyNote}
         onSelectDate={handleSelectDate}
+        onOpenTags={() => setIsTagsOpen(true)}
+        onOpenImport={() => setIsImportOpen(true)}
+        onOpenSync={() => setIsSyncOpen(true)}
         onOpenSettings={(tab) => {
           setSettingsTab(tab || 'features');
           setIsSettingsOpen(true);
@@ -790,26 +971,63 @@ export function App() {
       />
 
       {/* Main Document Workspace View */}
-      <main className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden bg-white dark:bg-[#191919] transition-colors">
+      <main className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden bg-white dark:bg-[#191919] transition-colors relative">
         {activePage ? (
           <>
-            <Navbar
-              page={activePage}
-              sidebarOpen={workspaceState.sidebarOpen}
-              language={language}
-              features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
-              isOutlineOpen={isOutlineOpen}
-              onToggleSidebar={() =>
-                setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
-              }
-              onToggleOutline={() => setIsOutlineOpen(!isOutlineOpen)}
-              onOpenLockModal={() => setIsLockModalOpen(true)}
-              onUpdatePage={handleUpdatePage}
-              onDeletePage={handleDeletePage}
-            />
+            {/* Navbar (Hidden in Focus / Zen Mode) */}
+            {!zenMode && (
+              <Navbar
+                page={activePage}
+                sidebarOpen={workspaceState.sidebarOpen}
+                language={language}
+                features={workspaceState.features || DEFAULT_FEATURE_FLAGS}
+                isOutlineOpen={isOutlineOpen}
+                zenMode={zenMode}
+                onToggleSidebar={() =>
+                  setWorkspaceState((prev) => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
+                }
+                onToggleOutline={() => setIsOutlineOpen(!isOutlineOpen)}
+                onOpenLockModal={() => setIsLockModalOpen(true)}
+                onOpenFindReplace={() => setIsFindReplaceOpen(true)}
+                onOpenHistory={() => setIsHistoryOpen(true)}
+                onToggleZenMode={() => setZenMode(!zenMode)}
+                onUpdatePage={handleUpdatePage}
+                onDeletePage={handleDeletePage}
+              />
+            )}
 
-            {/* Scrollable Document Canvas */}
-            <div className="flex-1 overflow-y-auto px-2 sm:px-4 pb-32">
+            {/* Multi-Tab Document Strip */}
+            {(!workspaceState.features || workspaceState.features.tabs !== false) && !zenMode && openTabs.length > 1 && (
+              <TabsBar
+                openTabIds={openTabs}
+                activePageId={activePage.id}
+                pages={currentWorkspace?.pages || {}}
+                language={language}
+                onSelectTab={handleSelectPage}
+                onCloseTab={handleCloseTab}
+                onNewTab={() => handleAddPage(null)}
+              />
+            )}
+
+            {/* Zen Mode Floating Exit Pill */}
+            {zenMode && (
+              <button
+                onClick={() => setZenMode(false)}
+                title={t('exitZenMode', language)}
+                className="fixed top-4 right-4 rtl:right-auto rtl:left-4 z-40 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow-lg transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none animate-in fade-in"
+              >
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>{t('exitZenMode', language)}</span>
+              </button>
+            )}
+
+            {/* Scrollable Document Canvas with Drag-and-Drop Image & Paste Support */}
+            <div
+              onPaste={handleCanvasPaste}
+              onDrop={handleCanvasDrop}
+              onDragOver={(e) => e.preventDefault()}
+              className="flex-1 overflow-y-auto px-2 sm:px-4 pb-32"
+            >
               <div
                 className={`mx-auto transition-all duration-150 ${
                   activePage.fullWidth ? 'max-w-6xl' : 'max-w-3xl'
@@ -842,41 +1060,46 @@ export function App() {
                   </div>
                 ) : (
                   <div className="px-2 sm:px-8 space-y-0.5">
-                    {activePage.blocks.map((block, idx) => (
-                      <BlockItem
-                        key={block.id}
-                        block={block}
-                        index={idx}
-                        language={language}
-                        allBlocks={activePage.blocks}
-                        isFocused={focusedBlockId === block.id}
-                        database={block.databaseId ? currentWorkspace?.databases[block.databaseId] : undefined}
-                        targetPageTitle={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].title : undefined}
-                        targetPageIcon={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].icon : undefined}
-                        onUpdateBlock={handleUpdateBlock}
-                        onAddBlockBelow={handleAddBlockBelow}
-                        onDeleteBlock={handleDeleteBlock}
-                        onFocusBlock={(id) => setFocusedBlockId(id)}
-                        onFocusPrevious={handleFocusPrevious}
-                        onFocusNext={handleFocusNext}
-                        onOpenSlashMenu={handleOpenSlashMenu}
-                        onNavigateToPage={(pageId) => handleSelectPage(pageId)}
-                        onUpdateDatabase={handleUpdateDatabase}
-                        onDragStart={(i) => setDraggedBlockIdx(i)}
-                        onDragOver={(i) => setDragOverBlockIdx(i)}
-                        onDragLeave={() => setDragOverBlockIdx(null)}
-                        onDrop={(targetIdx) => {
-                          if (draggedBlockIdx !== null && draggedBlockIdx !== targetIdx) {
-                            handleMoveBlock(draggedBlockIdx, targetIdx);
-                          }
-                          setDraggedBlockIdx(null);
-                          setDragOverBlockIdx(null);
-                        }}
-                        onMoveBlock={handleMoveBlock}
-                        isDragOver={dragOverBlockIdx === idx}
-                        isDragging={draggedBlockIdx === idx}
-                      />
-                    ))}
+                    {activePage.blocks.map((block, idx) => {
+                      if ((!workspaceState.features || workspaceState.features.collapsibleHeadings !== false) && hiddenBlockIds.has(block.id)) {
+                        return null;
+                      }
+                      return (
+                        <BlockItem
+                          key={block.id}
+                          block={block}
+                          index={idx}
+                          language={language}
+                          allBlocks={activePage.blocks}
+                          isFocused={focusedBlockId === block.id}
+                          database={block.databaseId ? currentWorkspace?.databases[block.databaseId] : undefined}
+                          targetPageTitle={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].title : undefined}
+                          targetPageIcon={block.targetPageId && currentWorkspace?.pages[block.targetPageId] ? currentWorkspace.pages[block.targetPageId].icon : undefined}
+                          onUpdateBlock={handleUpdateBlock}
+                          onAddBlockBelow={handleAddBlockBelow}
+                          onDeleteBlock={handleDeleteBlock}
+                          onFocusBlock={(id) => setFocusedBlockId(id)}
+                          onFocusPrevious={handleFocusPrevious}
+                          onFocusNext={handleFocusNext}
+                          onOpenSlashMenu={handleOpenSlashMenu}
+                          onNavigateToPage={(pageId) => handleSelectPage(pageId)}
+                          onUpdateDatabase={handleUpdateDatabase}
+                          onDragStart={(i) => setDraggedBlockIdx(i)}
+                          onDragOver={(i) => setDragOverBlockIdx(i)}
+                          onDragLeave={() => setDragOverBlockIdx(null)}
+                          onDrop={(targetIdx) => {
+                            if (draggedBlockIdx !== null && draggedBlockIdx !== targetIdx) {
+                              handleMoveBlock(draggedBlockIdx, targetIdx);
+                            }
+                            setDraggedBlockIdx(null);
+                            setDragOverBlockIdx(null);
+                          }}
+                          onMoveBlock={handleMoveBlock}
+                          isDragOver={dragOverBlockIdx === idx}
+                          isDragging={draggedBlockIdx === idx}
+                        />
+                      );
+                    })}
 
                   {/* Linked References / Backlinks Section */}
                   {backlinks.length > 0 && (!workspaceState.features || workspaceState.features.backlinks) && (
@@ -975,6 +1198,12 @@ export function App() {
           setSettingsTab(tab || 'features');
           setIsSettingsOpen(true);
         }}
+        onOpenFindReplace={() => setIsFindReplaceOpen(true)}
+        onOpenTags={() => setIsTagsOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onToggleZenMode={() => setZenMode((prev) => !prev)}
+        onOpenImport={() => setIsImportOpen(true)}
+        onOpenSync={() => setIsSyncOpen(true)}
         onExportWorkspace={handleExportWorkspace}
       />
 
@@ -1020,6 +1249,55 @@ export function App() {
           onClose={() => setIsOutlineOpen(false)}
         />
       )}
+
+      {/* In-Page Find & Replace Bar */}
+      {activePage && (
+        <FindReplaceBar
+          isOpen={isFindReplaceOpen}
+          blocks={activePage.blocks}
+          language={language}
+          onClose={() => setIsFindReplaceOpen(false)}
+          onUpdateBlocks={handleUpdateBlocks}
+          onFocusBlock={(id) => setFocusedBlockId(id)}
+        />
+      )}
+
+      {/* Tag Explorer Modal */}
+      <TagExplorerModal
+        isOpen={isTagsOpen}
+        pages={currentWorkspace?.pages || {}}
+        language={language}
+        onClose={() => setIsTagsOpen(false)}
+        onNavigateToPage={(pageId) => handleSelectPage(pageId)}
+      />
+
+      {/* Page Version History / Local Snapshots Modal */}
+      {activePage && (
+        <HistoryModal
+          isOpen={isHistoryOpen}
+          page={activePage}
+          language={language}
+          onClose={() => setIsHistoryOpen(false)}
+          onRestoreSnapshot={handleRestoreSnapshot}
+        />
+      )}
+
+      {/* Markdown & Obsidian Importer Modal */}
+      <ImportModal
+        isOpen={isImportOpen}
+        language={language}
+        onClose={() => setIsImportOpen(false)}
+        onImportPages={handleImportPages}
+      />
+
+      {/* Direct P2P & QR Transfer Modal */}
+      <P2PSyncModal
+        isOpen={isSyncOpen}
+        workspaceState={workspaceState}
+        language={language}
+        onClose={() => setIsSyncOpen(false)}
+        onImportSyncCode={handleImportWorkspace}
+      />
 
       {/* Settings & Customization Modal */}
       <SettingsModal

@@ -3,7 +3,7 @@ import {
   Search, Plus, Star, FileText, ChevronRight, ChevronDown, 
   Trash2, Moon, Sun, Download, Upload, Cpu, MoreHorizontal, Copy,
   Check, Edit3, Smile, X, Layers, Briefcase, Layout, Languages,
-  Calendar, CalendarDays, ChevronLeft, Network, Settings
+  Calendar, CalendarDays, ChevronLeft, Network, Settings, Hash, ArrowRightLeft
 } from 'lucide-react';
 import { Page, Workspace, AppTheme, FeatureFlags } from '../types';
 import { t, Language } from '../i18n';
@@ -30,6 +30,9 @@ interface SidebarProps {
   onOpenGraphView?: () => void;
   onOpenDailyNote?: () => void;
   onSelectDate?: (dateStr: string) => void;
+  onOpenTags?: () => void;
+  onOpenImport?: () => void;
+  onOpenSync?: () => void;
   onOpenSettings?: (tab?: 'features' | 'updates') => void;
   onExportWorkspace: () => void;
   onImportWorkspace: (json: string) => void;
@@ -65,6 +68,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenGraphView,
   onOpenDailyNote,
   onSelectDate,
+  onOpenTags,
+  onOpenImport,
+  onOpenSync,
   onOpenSettings,
   onExportWorkspace,
   onImportWorkspace,
@@ -492,6 +498,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span>{t('graphView', language)}</span>
             </button>
           )}
+
+          {/* Tags & Topics Explorer */}
+          {(!features || features.tags !== false) && (
+            <button
+              onClick={onOpenTags}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+            >
+              <Hash className="w-3.5 h-3.5 text-violet-500" />
+              <span>{t('tags', language)}</span>
+            </button>
+          )}
+
+          {/* Markdown & Obsidian Importer */}
+          <button
+            onClick={onOpenImport}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          >
+            <Upload className="w-3.5 h-3.5 text-sky-500" />
+            <span>{t('importMarkdown', language)}</span>
+          </button>
+
+          {/* Direct P2P & QR Code Sync */}
+          <button
+            onClick={onOpenSync}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-[#efefee] dark:hover:bg-[#2c2c2c] text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+          >
+            <ArrowRightLeft className="w-3.5 h-3.5 text-teal-500" />
+            <span>{t('p2pSync', language)}</span>
+          </button>
 
           {/* Daily Note & Mini-Calendar Quick Action */}
           {(!features || features.dailyNotes) && (

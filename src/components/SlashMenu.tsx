@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   Type, Heading1, Heading2, Heading3, CheckSquare, List, ListOrdered, 
   ChevronRight, Quote, Minus, AlertCircle, Code, Table, Kanban,
-  Image as ImageIcon, FileText, Sparkles, ListTree, Workflow
+  Image as ImageIcon, FileText, Sparkles, ListTree, Workflow, Mic
 } from 'lucide-react';
 import { BlockType, FeatureFlags } from '../types';
 import { t, Language } from '../i18n';
@@ -160,6 +160,13 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       category: t('catAdvanced', language),
     },
     {
+      type: 'audio',
+      label: t('voiceNote', language),
+      description: t('voiceNoteDesc', language),
+      icon: <Mic className="w-4 h-4 text-rose-500" />,
+      category: t('catAdvanced', language),
+    },
+    {
       type: 'database',
       label: t('blockTable', language),
       description: t('blockTableDesc', language),
@@ -191,6 +198,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
         if (!features.math && item.type === 'math') return false;
         if (!features.diagrams && item.type === 'diagram') return false;
         if (!features.toc && item.type === 'toc') return false;
+        if (features.voiceNotes === false && item.type === 'audio') return false;
         if (!features.databases && item.type === 'database') return false;
       }
       return true;

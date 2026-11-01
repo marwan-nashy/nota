@@ -15,6 +15,7 @@ export type BlockType =
   | 'diagram'
   | 'toc'
   | 'image'
+  | 'audio'
   | 'database'
   | 'page_link';
 
@@ -27,8 +28,11 @@ export interface Block {
   icon?: string;
   color?: string;
   isOpen?: boolean;
+  collapsed?: boolean;
   imageUrl?: string;
   caption?: string;
+  audioUrl?: string;
+  audioDuration?: number;
   databaseId?: string;
   targetPageId?: string;
 }
@@ -80,6 +84,16 @@ export interface Page {
   iv?: string;
   isDailyNote?: boolean;
   dateString?: string;
+  tags?: string[];
+}
+
+export interface PageSnapshot {
+  id: string;
+  pageId: string;
+  timestamp: number;
+  title: string;
+  blocks: Block[];
+  wordCount: number;
 }
 
 export interface Workspace {
@@ -102,6 +116,14 @@ export interface FeatureFlags {
   toc: boolean;
   databases: boolean;
   templates: boolean;
+  collapsibleHeadings: boolean;
+  findReplace: boolean;
+  zenMode: boolean;
+  wordCounter: boolean;
+  tabs: boolean;
+  tags: boolean;
+  snapshots: boolean;
+  voiceNotes: boolean;
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -114,6 +136,14 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   toc: true,
   databases: true,
   templates: true,
+  collapsibleHeadings: true,
+  findReplace: true,
+  zenMode: true,
+  wordCounter: true,
+  tabs: true,
+  tags: true,
+  snapshots: true,
+  voiceNotes: true,
 };
 
 export interface WorkspaceState {
@@ -123,4 +153,7 @@ export interface WorkspaceState {
   theme: AppTheme;
   language?: 'en' | 'ar';
   features?: FeatureFlags;
+  openTabs?: string[];
+  zenMode?: boolean;
+  typewriterMode?: boolean;
 }

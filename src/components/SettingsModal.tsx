@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings, X, Sliders, RefreshCw, CheckCircle2, AlertCircle, 
   Download, ExternalLink, Network, Workflow, Binary, Calendar, 
-  Link as LinkIcon, Lock, ListTree, Table, Layout, Sparkles, RotateCcw
+  Link as LinkIcon, Lock, ListTree, Table, Layout, Sparkles, RotateCcw,
+  ChevronDown, Search, Maximize2, Hash, History, Mic, Layers, Type
 } from 'lucide-react';
 import { FeatureFlags } from '../types';
 import { checkForAppUpdates, UpdateCheckResult, CURRENT_VERSION } from '../services/updater';
@@ -115,6 +116,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       description: t('featTemplatesDesc', language),
       icon: <Layout className="w-4 h-4" />,
       color: 'text-blue-500 bg-blue-500/10',
+    },
+    {
+      key: 'collapsibleHeadings',
+      label: t('featCollapsible', language),
+      description: t('featCollapsibleDesc', language),
+      icon: <ChevronDown className="w-4 h-4" />,
+      color: 'text-indigo-500 bg-indigo-500/10',
+    },
+    {
+      key: 'findReplace',
+      label: t('featFindReplace', language),
+      description: t('featFindReplaceDesc', language),
+      icon: <Search className="w-4 h-4" />,
+      color: 'text-sky-500 bg-sky-500/10',
+    },
+    {
+      key: 'zenMode',
+      label: t('featZenMode', language),
+      description: t('featZenModeDesc', language),
+      icon: <Maximize2 className="w-4 h-4" />,
+      color: 'text-purple-500 bg-purple-500/10',
+    },
+    {
+      key: 'wordCounter',
+      label: t('featWordCounter', language),
+      description: t('featWordCounterDesc', language),
+      icon: <Type className="w-4 h-4" />,
+      color: 'text-emerald-500 bg-emerald-500/10',
+    },
+    {
+      key: 'tabs',
+      label: t('featTabs', language),
+      description: t('featTabsDesc', language),
+      icon: <Layers className="w-4 h-4" />,
+      color: 'text-cyan-500 bg-cyan-500/10',
+    },
+    {
+      key: 'tags',
+      label: t('featTags', language),
+      description: t('featTagsDesc', language),
+      icon: <Hash className="w-4 h-4" />,
+      color: 'text-violet-500 bg-violet-500/10',
+    },
+    {
+      key: 'snapshots',
+      label: t('featSnapshots', language),
+      description: t('featSnapshotsDesc', language),
+      icon: <History className="w-4 h-4" />,
+      color: 'text-blue-500 bg-blue-500/10',
+    },
+    {
+      key: 'voiceNotes',
+      label: t('featVoiceNotes', language),
+      description: t('featVoiceNotesDesc', language),
+      icon: <Mic className="w-4 h-4" />,
+      color: 'text-rose-500 bg-rose-500/10',
     },
   ];
 
